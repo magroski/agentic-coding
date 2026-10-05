@@ -1,12 +1,14 @@
 ---
 name: verify
-description: Do a task with proof it was done well - agree precise pass/fail criteria before starting, match the format of a past accepted example, and have an independent second agent check the result. Use only when the user invokes it or explicitly asks for verified, double-checked, proven or independently reviewed work. Not for ordinary tasks.
-argument-hint: "<task to do and verify>"
+description: Do a task with proof it was done well - agree precise pass/fail criteria before starting, match the format of a past accepted example, and have an independent second agent check the result. Also checks work against the criteria of an approved plan. Use only when the user invokes it or explicitly asks for verified, double-checked, proven or independently reviewed work. Not for ordinary tasks.
+argument-hint: "<task to do and verify, or path to an approved plan>"
 ---
 
 # Verify
 
 Three things separate a result that is right from one that only looks right: the bar was set before the work, the format follows something already accepted, and someone other than the author checked. This skill does all three, for any deliverable: code, docs, plans, analysis.
+
+Two cases change which steps run: an approved plan, and work that already exists. Both are at the end.
 
 ## 1. Set the criteria
 
@@ -104,6 +106,17 @@ Outside the criteria: <format departures and other problems the reviewer raised>
 
 The verdicts are the reviewer's. Do not upgrade one in the report.
 
+## With an approved plan
+
+A plan written by the `plan` skill, with `Status: Approved` or later, already holds signed-off criteria in its Goal.
+
+- Use them verbatim. Skip steps 1 and 3: asking twice for the same approval teaches the user to stop reading.
+- Run step 2, name the example, and continue without waiting. Ask only if none fits.
+- Skip step 4 when the work is already built.
+- A criterion that proves wrong goes back to the plan for revision. Do not edit it here.
+
+If the plan is still `Draft`, or its Goal has no checkable criteria, the sign-off never happened. Run steps 1 and 3 as usual.
+
 ## Work that already exists
 
-Invoked after the work is done, the criteria can no longer come first. Write them from the original request, not from the output, and tell the user they were written after the fact. Then run steps 2, 3, 5, 6 and 7.
+Invoked after the work is done, with no plan to supply them, the criteria can no longer come first. Write them from the original request, not from the output, and tell the user they were written after the fact. Then run steps 2, 3, 5, 6 and 7.

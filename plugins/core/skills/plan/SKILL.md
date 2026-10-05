@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Plan software work before building it, at any size - one code change, an epic, or a whole project. Reads the code, data and docs, asks questions until nothing plan-changing is unknown, then writes a detailed plan under docs/plans/ and a short summary in chat. Use whenever the user asks to plan, scope, design, spec or break down a feature, bugfix, refactor, migration, epic or new project, or asks how to approach non-trivial work, even if they never say "plan".
+description: Plan software work before building it, at any size - one code change, an epic, or a whole project. Reads the code, data and docs, drafts the problem and tests it against evidence, asks questions until nothing plan-changing is unknown, then writes a detailed plan with a checkable goal under docs/plans/ and a short summary in chat. Use whenever the user asks to plan, scope, design, spec or break down a feature, bugfix, refactor, migration, epic or new project, or asks how to approach non-trivial work, even if they never say "plan".
 argument-hint: "<what to plan>"
 ---
 
@@ -24,18 +24,25 @@ Size sets depth and file layout. Over-planning a one-PR change wastes the user's
 
 - Too vague to size: that is the first question.
 - The repo already keeps plans or design docs elsewhere under `docs/`: follow its convention.
-- A plan for this work already exists: update it, do not write a second one.
+- A plan for this work already exists: revise it, do not write a second one.
 
 ## 2. Understand, ask, repeat
 
-Loop over these three steps until nothing unknown would change the plan.
+Loop over these steps until nothing unknown would change the plan.
 
 **Read what exists.** The request and whatever it links (issues, tickets, specs). The repo's docs and CLAUDE.md. The code on the path of the change, its tests, and recent git history. Any data within reach: schemas, migrations, fixtures, sample payloads, logs. Query live systems read-only. Greenfield work leaves little to read, so the questions carry more weight.
+
+**Draft the problem.** Write it early, on partial information, so the reading and the questions have something to aim at. One or two sentences: who is hurt, by what, and how badly. Keep the solution out of it. "We need a CSV export" is a solution. "Finance retypes 300 orders a month because orders cannot leave the app in a form their ledger imports" is a problem, and it leaves room for a simpler fix.
+
+**Test the draft.** Gather what could prove it wrong, not only what agrees: usage data, logs, tickets, the code path, a reproduction, the user's own account. Sort each finding into supports, contradicts or unknown. When the evidence contradicts, redraft and test again. A sound plan for the wrong problem is the most expensive kind, because everything after it is built well and still wasted.
+
+For a small change this is quick: the bug is the problem and a reproduction is the evidence.
 
 **Ask what the sources cannot answer.** Intent, scope, priorities, constraints, acceptance criteria, and trade-offs that are the user's call. A question the code could have answered costs the user time and shows the reading was skipped.
 
 - One batch per round, numbered, most plan-changing first.
 - Give each question a recommended default, so the user can reply `go` or `2: other answer`.
+- Show the problem draft when the evidence leaves it open. The user often knows what the data cannot show.
 - Small unknowns are not questions. Decide, and record the assumption in the plan.
 
 **Fold the answers in.** Answers move the ground: re-read the code they touch, and put any new questions in the next round.
@@ -48,6 +55,7 @@ Repo conventions (CLAUDE.md, existing patterns) win where they differ from what 
 
 What makes it executable:
 
+- **A goal that can be checked.** The Goal is numbered pass/fail criteria, each paired with its check: a command to run, or the exact thing to inspect. A reviewer with no context must be able to return PASS or FAIL. Three to eight. Approving the plan approves these criteria, and the `verify` skill takes them as given.
 - **Ordered steps, each leaving the system working.** Work can then stop or ship after any step.
 - **Concrete targets.** Each step names its files (`path:line` where the code exists) and the layer it touches.
 - **Layers respected.** No step lets a layer skip its neighbor, e.g. a controller querying the database directly. Route through the layer in between.
@@ -67,8 +75,17 @@ Write tersely. Every sentence should change what the executor does.
 
 Status: Draft
 
+## Problem
+Who is hurt, by what, how badly. No solution in it. Two sentences.
+
+## Evidence
+- Supports: <finding> (<source>)
+- Contradicts: <finding> (<source>)
+- Unknown: <what would settle it>
+
 ## Goal
-What changes, for whom, and why. Two sentences.
+The outcome, in one sentence. Then the criteria that prove it:
+1. <criterion> | check: <command or inspection>
 
 ## Context
 How it works today, with `path:line` references. Constraints found.
@@ -77,7 +94,7 @@ How it works today, with `path:line` references. Constraints found.
 The chosen design and the reason. Rejected alternatives, one line each.
 
 ## Steps
-1. <what changes> | `<files>` | <layer>
+1. [ ] <what changes> | `<files>` | <layer>
 
 ## Tests
 - Happy: <behavior>
@@ -94,6 +111,8 @@ The chosen design and the reason. Rejected alternatives, one line each.
 - Assumed: <assumption>
 ```
 
+A slice inherits its epic's Problem and Evidence. Leave them out unless the slice has its own.
+
 ### Epic or project `README.md`
 
 ```markdown
@@ -101,7 +120,12 @@ The chosen design and the reason. Rejected alternatives, one line each.
 
 Status: Draft
 
+## Problem
+
+## Evidence
+
 ## Goal
+The outcome, then the criteria that prove the whole is done, each with its check.
 
 ## Scope
 In: ...
@@ -140,6 +164,7 @@ What a user can do when this milestone ends.
 1. <slice>: a paragraph, or a change-level plan for the first milestone.
 
 ## Exit criteria
+1. <criterion> | check: <command or inspection>
 ```
 
 ## 4. Summarize in chat
@@ -148,7 +173,9 @@ After the files are written, print one screen and no more. The files hold the de
 
 ```
 Plan: <title> (<size>)
+Problem: <one line>
 Goal: <one line>
+Criteria: <numbered, one line each>
 Approach: <2-4 bullets>
 Steps: <numbered, one line each; slices or milestones for larger sizes>
 Risks: <top 1-3>
@@ -157,3 +184,9 @@ Files: <paths>
 ```
 
 Then stop and wait. Apply requested changes to the files, not only to the chat. Set `Status: Approved` once the user approves.
+
+## Revising
+
+New information reopens a plan, whatever its Status. Change the Problem, Evidence, Goal, Approach or Steps in place, and add a Decisions line: what was learned, and what changed.
+
+If the Goal or the Approach changed, set `Status: Draft` and get approval again. The user approved something that no longer exists. Corrections that leave both intact need no new approval.
