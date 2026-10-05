@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agentic-coding",
+  "owner": {
+    "name": "magroski",
+    "url": "https://github.com/magroski"
+  },
+  "description": "Personal Claude Code plugins and skills, shared across projects.",
+  "plugins": [
+    {
+      "name": "lucas",
+      "source": "./plugins/lucas",
+      "description": "Skills wanted in every project."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "lucas",
+  "description": "Skills wanted in every project.",
+  "author": {
+    "name": "magroski",
+    "url": "https://github.com/magroski"
+  },
+  "repository": "https://github.com/magroski/agentic-coding",
+  "license": "MIT"
+}
