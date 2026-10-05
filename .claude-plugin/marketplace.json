@@ -8,8 +8,8 @@
   "description": "Personal Claude Code plugins and skills, shared across projects.",
   "plugins": [
     {
-      "name": "lucas",
-      "source": "./plugins/lucas",
+      "name": "core",
+      "source": "./plugins/core",
       "description": "Skills wanted in every project."
     }
   ]

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "lucas",
+  "name": "core",
   "description": "Skills wanted in every project.",
   "author": {
     "name": "magroski",
