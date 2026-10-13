@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "task-progress",
+  "description": "Small pane showing progress of the current task list.",
+  "author": {
+    "name": "magroski",
+    "url": "https://github.com/magroski"
+  },
+  "repository": "https://github.com/magroski/agentic-coding",
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}

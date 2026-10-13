@@ -18,6 +18,8 @@ This machine, all projects:
 ```bash
 claude plugin marketplace add /path/to/agentic-coding
 claude plugin install core@agentic-coding
+claude plugin install task-progress@agentic-coding   # pane: task list progress
+claude plugin install needs-you@agentic-coding       # band: decisions waiting on you
 ```
 
 Another machine:
@@ -25,6 +27,8 @@ Another machine:
 ```bash
 claude plugin marketplace add magroski/agentic-coding
 claude plugin install core@agentic-coding
+claude plugin install task-progress@agentic-coding   # pane: task list progress
+claude plugin install needs-you@agentic-coding       # band: decisions waiting on you
 ```
 
 One project only: add `--scope project` (committed, shared with the team) or
