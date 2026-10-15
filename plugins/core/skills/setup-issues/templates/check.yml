@@ -1,0 +1,41 @@
+name: Check
+description: Query to run on one or more dates to validate a piece of work.
+labels: [check]
+body:
+  - type: input
+    id: question
+    attributes:
+      label: Question
+      placeholder: Is database load stable after the last change?
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How to check
+      description: The query, command or dashboard to read.
+    validations:
+      required: true
+  - type: input
+    id: pass
+    attributes:
+      label: Pass when
+      placeholder: p95 CPU under 60% all day
+    validations:
+      required: true
+  - type: textarea
+    id: run-on
+    attributes:
+      label: Run on
+      description: One date per line, YYYY-MM-DD.
+      placeholder: |
+        2026-10-20
+        2026-10-27
+    validations:
+      required: true
+  - type: input
+    id: validates
+    attributes:
+      label: Validates
+      description: Issue or PR whose work this checks.
+      placeholder: "#42"

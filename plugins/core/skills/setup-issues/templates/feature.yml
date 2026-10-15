@@ -1,0 +1,25 @@
+name: Feature
+description: Task that delivers product value.
+labels: [feature]
+body:
+  - type: textarea
+    id: value
+    attributes:
+      label: Value
+      description: Who benefits, and how. The problem, not the solution.
+      placeholder: Finance retypes 300 orders a month because orders cannot leave the app.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Pass/fail checks that prove it is done.
+      placeholder: "- [ ] Orders export as CSV, one row per order"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Designs, links, constraints, out of scope.

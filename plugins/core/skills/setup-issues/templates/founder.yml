@@ -1,0 +1,27 @@
+name: Founder
+description: Task only the founder can do, by hand.
+labels: [founder]
+assignees: [FOUNDER_LOGIN]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      placeholder: Buy example.com and point its DNS at the host.
+    validations:
+      required: true
+  - type: input
+    id: unblocks
+    attributes:
+      label: Unblocks
+      placeholder: "#42"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      description: Instructions, links, values to enter.
+  - type: input
+    id: due
+    attributes:
+      label: Due
+      placeholder: YYYY-MM-DD

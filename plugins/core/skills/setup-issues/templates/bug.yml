@@ -1,0 +1,30 @@
+name: Bug
+description: Broken behavior to fix.
+labels: [bug]
+body:
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens
+      placeholder: The sign-in email link opens a 404.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      placeholder: The link signs the user in.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Request a sign-in email
+        2. Click the link
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Environment, version, logs, screenshots.
