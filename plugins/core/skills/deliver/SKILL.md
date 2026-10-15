@@ -16,7 +16,7 @@ One loop, six steps:
 5. Define a clear and simple approach   --+
 6. Act with urgency to achieve the goal ----- build, then verify
        |
-       +-- new information: back to 2
+       +-- new information: revise the plan (2-5)
 ```
 
 This skill owns the order, the building, and the way back. The `plan` and `verify` skills own the rest. Invoke them with the Skill tool as `core:plan` and `core:verify`, and follow them as written.
@@ -32,7 +32,11 @@ The plan file is the shared state. Every stage reads it and writes to it, which 
 | A plan with `Status: Approved` or `In progress` | Build, at the first unticked step |
 | A plan with `Status: Done` | Nothing. Say so. |
 
+Resuming `In progress`, compare the working tree and recent commits with the ticks before building. A session that stopped mid-step leaves that step unticked but partly done: finish it from where it stands, do not redo it.
+
 An epic or project runs one slice at a time, in Breakdown order: build and verify a slice before starting the next. Slices are cut to be verifiable alone, so a wrong turn caught at slice two is not built on by slice five. A slice that was only outlined gets planned in detail when its turn comes, with what the earlier slices taught.
+
+The levels above a slice follow it. A milestone or the README goes `In progress` with its first slice. When its last slice is `Done`, invoke `core:verify` with its file, and set it `Done` only when that passes.
 
 ## Plan: steps 1 to 5
 
@@ -54,13 +58,15 @@ Urgency is the shortest path to the Goal's criteria, not haste:
 
 When every step is ticked, invoke `core:verify` with the plan's path. It takes the criteria from the plan and does not ask for them again.
 
+Record each fix verify makes as a Decisions line in the plan: the criterion that failed, and what changed. The plan stays the full record of what was built.
+
 - **All criteria pass:** set `Status: Done`.
 - **A criterion is Disputed:** report both sides and wait for the user's ruling.
-- **Still failing after verify's two rounds:** that is new information. Take the way back.
+- **Still failing after verify's two rounds:** that is new information, and the user's call. Take the way back.
 
 ## The way back
 
-Stop building and return to step 2 when:
+Stop building and revise the plan when:
 
 - Evidence contradicts the Problem.
 - A step shows the Approach cannot work, or that a much simpler one exists.
@@ -73,8 +79,10 @@ Ordinary friction is not a trigger. A test that fails inside the approach gets f
 On a trigger:
 
 1. Say what was learned, in a line or two.
-2. Invoke `core:plan` to revise the plan in place. Its Revising section decides whether the user must approve again.
+2. Invoke `core:plan` to revise the plan in place. Its Revising section decides whether the user must approve again, except after a verify failure: then they always must. Unless the user asked for the change, start the revision's Decisions line with `Way back:`.
 3. Untick the steps the revision invalidates, then resume Build at the first unticked one.
+
+At most two trips back per plan file. Count the `Way back:` lines, so the count survives a new session. A third trigger means the problem is not yet understood: stop, report what each trip taught, and wait for the user.
 
 Stopping feels slower than pushing on. It is not: work built past a broken assumption is work to redo, and the cheapest moment to change the plan is the moment the assumption breaks.
 

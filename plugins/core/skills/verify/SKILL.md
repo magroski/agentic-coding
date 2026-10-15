@@ -108,11 +108,11 @@ The verdicts are the reviewer's. Do not upgrade one in the report.
 
 ## With an approved plan
 
-A plan written by the `plan` skill, with `Status: Approved` or later, already holds signed-off criteria in its Goal.
+A plan written by the `plan` skill, with `Status: Approved` or later, already holds signed-off criteria in its Goal, or for a milestone, its Exit criteria.
 
 - Use them verbatim. Skip steps 1 and 3: asking twice for the same approval teaches the user to stop reading.
 - Run step 2, name the example, and continue without waiting. Ask only if none fits.
-- Skip step 4 when the work is already built.
+- When the work is already built, skip step 4's building but not its self-check: run each check before the review.
 - A criterion that proves wrong goes back to the plan for revision. Do not edit it here.
 
 If the plan is still `Draft`, or its Goal has no checkable criteria, the sign-off never happened. Run steps 1 and 3 as usual.
