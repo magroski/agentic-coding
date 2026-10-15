@@ -22,7 +22,7 @@ The user watches a live list of decisions that need them, above their prompt, an
 const FLAG_SPEC = {
   name: 'flag',
   description:
-    "Adds a decision that needs the user to the live list above their prompt. Call it as soon as the need arises, then continue with unblocked work. Returns the item's id.",
+    "Adds a decision that needs the user to the live list above their prompt. Call it as soon as the need arises, then continue with unblocked work. Not for choices you can reasonably make yourself, or for an item already open. Returns the item's id; the user's answer arrives in a later message, often starting 'Re #<id>:'.",
   isDeferred: false,
   inputSchema: {
     type: 'object',
@@ -39,11 +39,14 @@ const FLAG_SPEC = {
 
 const RESOLVE_SPEC = {
   name: 'resolve',
-  description: "Removes decisions from the user's list once they are settled or moot.",
+  description:
+    "Removes decisions from the user's list once they are settled or moot: the user answered, or the work no longer needs the answer. Ids that are not open are skipped; the result lists the ones removed.",
   isDeferred: false,
   inputSchema: {
     type: 'object',
-    properties: { ids: { type: 'array', items: { type: 'integer' }, minItems: 1 } },
+    properties: {
+      ids: { type: 'array', items: { type: 'integer' }, minItems: 1, description: 'Ids returned by flag, e.g. [3].' },
+    },
     required: ['ids'],
   },
 }
