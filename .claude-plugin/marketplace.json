@@ -11,16 +11,6 @@
       "name": "core",
       "source": "./plugins/core",
       "description": "Skills wanted in every project."
-    },
-    {
-      "name": "task-progress",
-      "source": "./plugins/task-progress",
-      "description": "Small pane showing progress of the current task list."
-    },
-    {
-      "name": "needs-you",
-      "source": "./plugins/needs-you",
-      "description": "Band above the prompt listing decisions Claude needs from you, as they come up."
     }
   ]
 }

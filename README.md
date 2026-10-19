@@ -7,9 +7,25 @@ Personal Claude Code plugin marketplace. One repo, every project.
 plugins/
   core/                            one plugin = one installable unit
     .claude-plugin/plugin.json     manifest
-    skills/
-      plan/SKILL.md                invoked as /core:plan
+    skills/<name>/SKILL.md         invoked as /core:<name>
+    agents/<name>.md               spawned as core:<name>
 ```
+
+## Workflow
+
+```
+/core:setup   once per repo: issue types, labels, forms, and the Delivery facts every skill reads
+/core:epic    product planning: outcome, business rules, metrics, scope -> epic doc, milestone, issues
+/core:task    technical planning: approach, criteria, test map, post-deploy checks -> task plan
+/core:build   one task: tests first, gated -> code -> verifier + reviewer -> PR -> merge -> deploy -> checks
+/core:next    daily brief: due checks, what needs you, ready lanes; then leads lanes in parallel
+/core:file-issue  one issue in the repo's format
+```
+
+Agents stop only at the gates: epic approval, one-way doors, merge, deploy, and anything blocked,
+destructive or outside the repo. Merge and deploy can be pre-authorized in the prompt. Retries are
+capped (two test-gate rounds, one review fix round, two trips back to the plan), then they report.
+Design and decisions: [docs/plans/agentic-workflow/README.md](docs/plans/agentic-workflow/README.md).
 
 ## Use
 
@@ -18,8 +34,6 @@ This machine, all projects:
 ```bash
 claude plugin marketplace add /path/to/agentic-coding
 claude plugin install core@agentic-coding
-claude plugin install task-progress@agentic-coding   # pane: task list progress
-claude plugin install needs-you@agentic-coding       # band: decisions waiting on you
 ```
 
 Another machine:
@@ -27,8 +41,6 @@ Another machine:
 ```bash
 claude plugin marketplace add magroski/agentic-coding
 claude plugin install core@agentic-coding
-claude plugin install task-progress@agentic-coding   # pane: task list progress
-claude plugin install needs-you@agentic-coding       # band: decisions waiting on you
 ```
 
 One project only: add `--scope project` (committed, shared with the team) or
