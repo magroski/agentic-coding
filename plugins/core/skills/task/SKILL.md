@@ -64,7 +64,7 @@ Small unknowns are not questions. Decide and record them.
 - At the highest level the repo supports: end-to-end, then API or feature, then unit.
 - Each test is one behavior, written as given/when/then, with the reason it fails before the build.
 - Happy, sad and edge cases only where there is branching, a boundary or a business rule. No tautologies, no tests of getters or boilerplate.
-- A criterion's tests together fail both an implementation that always succeeds and one that always refuses: a criterion about rejecting bad input also gets a test where good input passes.
+- A criterion's tests together fail both an implementation that always succeeds and one that always refuses: a criterion about rejecting bad input also gets a test where good input passes. When that behavior already works today, its row is a guard: its red reason reads `guard: passes before build`, and it must pass, not fail, before the build.
 - External dependencies are mocked; time and randomness are injected. Tests are deterministic and fast.
 - A bug's first test reproduces the report.
 
@@ -85,7 +85,7 @@ An epic success metric this task unlocks becomes a delayed check here.
 
 Next to the epic doc, prefixed with the epic's number: `docs/plans/<roadmap>/NN-<slug>.md`. A task with no epic: `docs/plans/<slug>.md`. The repo's own convention wins.
 
-Commit the plan, and any epic doc edits, on the task's branch `<type>/<n>-<slug>` and push it: from `origin/<default branch>`, or the existing branch if there is one. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. A plan that lives only in one checkout is invisible to the lane that builds it and to `next`.
+Commit the plan, and any epic doc edits, on the branch the `build` skill checked out, else on the task's branch `<type>/<n>-<slug>` (the existing one, or new from `origin/<default branch>`), and push it. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. A plan that lives only in one checkout is invisible to the lane that builds it and to `next`.
 
 ```markdown
 # <Title>

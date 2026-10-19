@@ -19,7 +19,7 @@ You get a plan path, the repo's test commands, and an example test file. Read th
 
 ## Run
 
-Run each test with the repo's command and keep its failure output. Each must fail, for the reason the Test map gives. A failure for any other reason (syntax error, wrong import path, missing fixture or factory) is your bug: fix it.
+Run each test with the repo's command and keep its failure output. Each must fail, for the reason the Test map gives, except guard rows (`guard: passes before build`), which must pass. A failure for any other reason (syntax error, wrong import path, missing fixture or factory) is your bug: fix it.
 
 Do not commit.
 

@@ -46,6 +46,7 @@ The design also sets limits that end in a report: two gate rounds, one review fi
 
 | Given | Start at |
 | :- | :- |
+| The issue is open but its PR is merged: reopened after a rollback | 1, on a new branch (see Branch) |
 | An issue or request with no plan | 1, which plans it |
 | `Status: Draft` with `One-way (open)` lines | Show them, each with its recommendation, and stop. |
 | `Status: Draft` without them | 1: `core:task` finishes the plan. |
@@ -56,14 +57,13 @@ The design also sets limits that end in a report: two gate rounds, one review fi
 | `Status: Done`, PR open | 7.4 |
 | `Status: Done`, PR merged, no post-deploy comment on it | 8's deploy, if Delivery's deploy is manual and the live signal does not show this merge; then 9 |
 | `Status: Done`, otherwise | Nothing. Say so. |
-| Issue reopened after a rollback | 1, on a new branch (see Branch) |
 
 ## 1. Preflight
 
 - **Fetch** first: `git fetch origin`. Everything below works from the remote's state.
 - **Delivery.** In a lane, run the Delivery section's worktree setup before anything else, since planning may reproduce a bug or measure a baseline. No Delivery section: outside a lane, use the facts the plan's Context records; in a lane, stop as blocked and ask for `/core:setup`, since a lane without its own stack fights the main one for ports.
-- **Plan.** None, Draft, or without a Test map: invoke `core:task` and follow it. It commits the plan on the task's branch. A one-way door there is a gate.
-- **Branch.** Check out the task's branch, `<type>/<n>-<slug>`, from the remote if it exists there; else create it from `origin/<default branch>`. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. An issue reopened after a rollback never reuses its merged branch, which the revert undoes: create `<type>/<n>-<slug>-<k>` from `origin/<default branch>`, and revise the plan through `core:task` with a `Way back:` line saying what the rollback showed.
+- **Branch.** Check out the task's branch, `<type>/<n>-<slug>`, from the remote if it exists there; else create it from `origin/<default branch>`. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. An issue reopened after a rollback never reuses its merged branch, which the revert undoes: create `<type>/<n>-<slug>-<k>` from `origin/<default branch>` and copy the plan in from the merged branch (`git checkout origin/<merged branch> -- <plan>`), so its decisions and way-back count survive.
+- **Plan.** None, Draft, without a Test map, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
 - Set `Status: In progress`, commit, push.
 - **Baseline.** Run the full suite. Tests already failing are recorded under Decisions as pre-existing and left out of every later "still green" check. Measure the performance baseline if the plan has one without a value.
 
@@ -73,7 +73,7 @@ Spawn `core:test-writer`. It writes the Test map's tests and runs them. It does 
 
 ## 3. Gate
 
-1. Run each new test yourself. Each fails, and its output matches the reason in the Test map. The rest of the suite is unchanged.
+1. Run each new test yourself. Each fails, and its output matches the reason in the Test map; guard rows pass. The rest of the suite is unchanged.
 2. Spawn `core:test-auditor`.
 3. A FAIL from either: spawn a fresh `core:test-writer` with the plan and the findings. At most two fix rounds. Still failing means the Test map or the interfaces in the plan are wrong: take the way back.
 4. Gate passed: commit the test writer's files alone, as `Add failing tests for #<n>`. That commit is the freeze point, and every file in it is frozen, test support included; the build adds its own helpers in new files. Add to Decisions: `Tests frozen at <sha>: <files>. Gate: <n> red for the stated reasons; auditor PASS, round <k>.`
@@ -144,7 +144,7 @@ Leave out sections with nothing in them. A follow-up that changes how a future i
 
 **A lane stops here** and reports (step 11), to be resumed by the lead once merged.
 
-Otherwise merge at the gate: ask in one line, unless pre-authorized and nothing is Disputed. Just before merging, `git fetch` and check the branch contains the default branch: `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. It does not: back to 7.1. Use the repo's usual merge method, as recent history shows. Deploy per Delivery: automatic on merge, a GitHub Action to watch, or a manual command behind the deploy gate.
+Otherwise merge at the gate: ask in one line, unless pre-authorized and nothing is Disputed. Just before merging, `git fetch` and check the branch contains the default branch: `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. It does not: back to 7.1. Use the repo's usual merge method, as recent history shows. Deploy per Delivery: automatic on merge, a GitHub Action to watch, or a manual command behind the deploy gate. A manual deploy runs from a fresh detached checkout of the merged default branch (`git fetch`, `git worktree add --detach <tmp> origin/<default branch>`, removed after), never from a working checkout, which may be behind or hold unmerged work.
 
 ## 9. Post-deploy
 

@@ -11,7 +11,7 @@ You get a plan path, the test files, the repo's test commands, and the tests tha
 ## Check
 
 1. **Coverage.** Every criterion that is not `check-only` has at least one test, and every business rule the plan cites is asserted somewhere.
-2. **Red for the stated reason.** Run each test. It fails, and its output matches the Test map's reason. A failure for another reason (syntax, import path, missing fixture) is FAIL.
+2. **Red for the stated reason.** Run each test. It fails, and its output matches the Test map's reason. A failure for another reason (syntax, import path, missing fixture) is FAIL. A guard row (`guard: passes before build`) must pass instead.
 3. **Catches a wrong build.** For each test, name one plausible wrong implementation it would catch. Then, per criterion: if you can name a plausible wrong implementation that would pass every test mapped to that criterion, that criterion is FAIL, with the implementation as evidence. A single sad-path test cannot rule out "always fail"; its criterion's happy-path test does.
 4. **Sound.** FAIL for: a tautology (asserts what it set up), mocking the unit under test, real clock, randomness or network, order dependence, asserting internals instead of behavior, or asserting behavior the plan does not ask for.
 5. **Nothing else moved.** Run the full suite. Tests outside these files pass, except the ones that already failed before.
