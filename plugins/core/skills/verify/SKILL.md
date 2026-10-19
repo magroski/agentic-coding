@@ -68,6 +68,8 @@ the work itself. A criterion you could not check is FAIL, with the reason.
 Give no benefit of the doubt. Do not edit anything.
 
 Then list where the output's format departs from the example.
+Then, if the output is code, list anything it reimplements that the codebase,
+standard library, platform or an installed dependency already provides, with path:line of both.
 Then list any other problem you noticed, outside the criteria.
 ```
 

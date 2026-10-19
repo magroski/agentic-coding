@@ -51,6 +51,7 @@ Set `Status: In progress`. Take the plan's Steps in order and tick each one in t
 Urgency is the shortest path to the Goal's criteria, not haste:
 
 - **Do what the step says and nothing else.** Improvements the plan did not ask for are how a two-day change becomes a two-week one. Note them for later and move on.
+- **Re-check the ladder before coding.** Before writing a step's code, run the `plan` ladder on it. If a higher rung holds, use it instead of the code. If that changes the Approach, take the way back. Otherwise it's a step correction.
 - **Check after every step.** Run the tests or checks that step touches. A break found now has one suspect; found at the end it has ten.
 - **Keep moving.** Do not stop to ask what the plan already answers. Stop for the triggers below, and for anything destructive or irreversible.
 

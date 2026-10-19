@@ -30,7 +30,7 @@ Size sets depth and file layout. Over-planning a one-PR change wastes the user's
 
 Loop over these steps until nothing unknown would change the plan.
 
-**Read what exists.** The request and whatever it links (issues, tickets, specs). The repo's docs and CLAUDE.md. The code on the path of the change, its tests, and recent git history. Any data within reach: schemas, migrations, fixtures, sample payloads, logs. Query live systems read-only. Greenfield work leaves little to read, so the questions carry more weight.
+**Read what exists.** The request and whatever it links (issues, tickets, specs). The repo's docs and CLAUDE.md. The code on the path of the change, its tests, and recent git history. What already does part of the job: helpers in the codebase, the standard library, platform features, installed dependencies. Any data within reach: schemas, migrations, fixtures, sample payloads, logs. Query live systems read-only. Greenfield work leaves little to read, so the questions carry more weight.
 
 **Draft the problem.** Write it early, on partial information, so the reading and the questions have something to aim at. One or two sentences: who is hurt, by what, and how badly. Keep the solution out of it. "We need a CSV export" is a solution. "Finance retypes 300 orders a month because orders cannot leave the app in a form their ledger imports" is a problem, and it leaves room for a simpler fix.
 
@@ -59,7 +59,16 @@ What makes it executable:
 - **Ordered steps, each leaving the system working.** Work can then stop or ship after any step.
 - **Concrete targets.** Each step names its files (`path:line` where the code exists) and the layer it touches.
 - **Layers respected.** No step lets a layer skip its neighbor, e.g. a controller querying the database directly. Route through the layer in between.
-- **Smallest change that reaches the goal.** Refactors the goal does not need go under Out of scope.
+- **Smallest change that reaches the goal.** For each part the goal needs, stop at the first rung that holds:
+  1. Needed at all? No: drop it, say why.
+  2. In this codebase? Reuse it.
+  3. Standard library? Use it.
+  4. Native platform feature (DB constraint, HTML attribute, framework built-in)? Use it.
+  5. Installed dependency? Use it.
+  6. One line? Write one line.
+  7. Else the minimum that works, plus one small test if it has logic.
+
+  Rungs 2-5 need a search, not a guess. Never cut: validation, security, accessibility, layer boundaries. A new dependency is the user's call. Refactors the goal does not need go under Out of scope.
 - **Bugs start with a failing test.** Step 1 reproduces the reported behavior in a test, so the fix is proven rather than assumed.
 - **Tests as behaviors, not coverage.** Happy path, sad path, edge cases, and only where there is branching, a boundary, or a business rule to protect.
 - **A diagram for anything with more than two moving parts.** ASCII, in the file.
@@ -91,7 +100,7 @@ The outcome, in one sentence. Then the criteria that prove it:
 How it works today, with `path:line` references. Constraints found.
 
 ## Approach
-The chosen design and the reason. Rejected alternatives, one line each.
+The chosen design and the reason. Each part's rung and what it reuses (`path:line`, API, package). Rejected alternatives, one line each.
 
 ## Steps
 1. [ ] <what changes> | `<files>` | <layer>
