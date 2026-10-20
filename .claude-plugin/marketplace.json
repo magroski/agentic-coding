@@ -11,6 +11,11 @@
       "name": "core",
       "source": "./plugins/core",
       "description": "Skills wanted in every project."
+    },
+    {
+      "name": "lanes",
+      "source": "./plugins/lanes",
+      "description": "Live view of core's build lanes: stage, helper agents, current call."
     }
   ]
 }
