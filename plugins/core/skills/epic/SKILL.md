@@ -100,7 +100,7 @@ Platform, legal, cost, and founder prerequisites (#<n>).
 - Assumed: <assumption>
 ```
 
-- **Tasks** are one PR each and deliver something verifiable alone. A task that only pays off once a later one lands is cut in the wrong place. Detail what can be detailed now; where a later task depends on what an earlier one teaches, outline it and name what must be learned.
+- **Tasks** are one PR each and deliver something verifiable alone. A task that only pays off once a later one lands is cut in the wrong place. A task that a user reaches through more than one surface (the API and the web app, say), needs production setup of its own, or brings in more than one outside service (a sign-in provider, an e-mail sender) is several tasks: cut it along those lines. Detail what can be detailed now; where a later task depends on what an earlier one teaches, outline it and name what must be learned.
 - **No technical content:** no stack, architecture, file paths or library choices. Business rules say what must hold, not how.
 - **Success metrics** each name the task that unlocks them; that task's plan turns the metric into a dated `check` issue.
 - **Exit criteria** are pass/fail, each with its check, and cover the deliverable and the business rules. A metric that needs weeks to read stays a success metric.

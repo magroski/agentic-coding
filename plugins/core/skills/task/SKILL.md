@@ -42,7 +42,7 @@ For each part the goal needs, stop at the first rung that holds:
 
 Rungs 2-5 need a search, not a guess. A new dependency is fine when no higher rung holds and it earns its place; a package for a few lines never does. Never cut: validation, security, accessibility, layer boundaries.
 
-Too big for one PR: split it. File the extra issues in the same milestone, move the acceptance criteria they take over out of the original issue, add them to the epic doc's Tasks, and plan the first.
+Too big for one build: split it. It is too big when it ships through more than one deploy target (API, web app, production infrastructure or config), brings in more than one new outside service, or its Test map comes to more than 15 rows (check again after step 5). Every gate and review round on an oversized task finds another gap, so it never converges. Split along those lines, each piece verifiable alone. File the extra issues in the same milestone, move the acceptance criteria they take over out of the original issue, add them to the epic doc's Tasks, and plan the first.
 
 ## 4. Classify every decision
 
@@ -63,6 +63,8 @@ Small unknowns are not questions. Decide and record them.
 
 - At the highest level the repo supports: end-to-end, then API or feature, then unit.
 - Each test is one behavior, written as given/when/then, with the reason it fails before the build.
+- Each row names the plausible wrong implementation it rules out. Then, per criterion, ask what wrong build would still pass every row; if one comes to mind, add the row that catches it. The test auditor asks the same question at the gate, where each gap costs a round.
+- A criterion on a trust boundary (sign-in, sessions, tokens, callbacks from outside services, payments, permissions) gets a row for each property an attacker would exploit: cookie flags, state and nonce checks, single-use secrets, values that must match from one request to the next.
 - Happy, sad and edge cases only where there is branching, a boundary or a business rule. No tautologies, no tests of getters or boilerplate.
 - A criterion's tests together fail both an implementation that always succeeds and one that always refuses: a criterion about rejecting bad input also gets a test where good input passes. When that behavior already works today, its row is a guard: its red reason reads `guard: passes before build`, and it must pass, not fail, before the build.
 - External dependencies are mocked; time and randomness are injected. Tests are deterministic and fast.
@@ -106,9 +108,9 @@ How it works today, with `path:line`. Constraints. Delivery facts that matter he
 The design and why. An ASCII diagram for anything with more than two moving parts. Each part's rung and what it reuses (`path:line`, API, package). The public interfaces the tests use. Rejected alternatives, one line each.
 
 ## Test map
-| C | Test | Level | Behavior | Red before build because |
-| :- | :- | :- | :- | :- |
-| 1 | `<file>`: <name> | api | given … when … then … | <endpoint> does not exist |
+| C | Test | Level | Behavior | Red before build because | Rules out |
+| :- | :- | :- | :- | :- | :- |
+| 1 | `<file>`: <name> | api | given … when … then … | <endpoint> does not exist | <a wrong build that would pass without this row> |
 
 ## Performance
 | Metric | Baseline | Target | Method |

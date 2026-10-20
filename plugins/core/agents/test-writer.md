@@ -14,6 +14,7 @@ You get a plan path, the repo's test commands, and an example test file. Read th
 - In the repo's style: the example's structure, naming, helpers and factories.
 - Against the public interfaces the Approach names, as if they existed.
 - Each test is one behavior. Assert the outcome a user or caller sees, not how it is computed.
+- Different inputs get different values: two URLs, ids or tokens that the code receives separately are never equal in a test, or code that uses one in place of the other passes it.
 - Deterministic: inject the clock, seed randomness, no real network. Mock only external dependencies, never the unit under test.
 - No implementation code. Test support (factories, fixtures, fakes of external services) is fine, and is frozen with the tests: the builder cannot bend it later. A test that cannot even load without production code fails for that reason, and the plan's red reason must say so.
 

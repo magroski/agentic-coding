@@ -38,7 +38,7 @@ Stop only for these. Everything else is decided, recorded under the plan's Decis
 - Merging to the default branch, and a deploy that does not follow merge automatically. Skip both when the prompt pre-authorizes them, except while a criterion is Disputed: that is the founder's ruling either way.
 - Cannot continue without the founder; anything destructive; anything outside the repo.
 
-The design also sets limits that end in a report: two gate rounds, one review fix round, two attempts at a red CI or a missed check, two trips back to the plan.
+The design also sets limits that end in a report: three test audits per task (counted across way backs), one review fix round, two attempts at a red CI or a missed check, two trips back to the plan.
 
 **As a lane** (the prompt says so), the founder is reached only through the lead: return a question instead of stopping on it, and stop before merging.
 
@@ -75,7 +75,7 @@ Spawn `core:test-writer`. It writes the Test map's tests and runs them. It does 
 
 1. Run each new test yourself. Each fails, and its output matches the reason in the Test map; guard rows pass. The rest of the suite is unchanged.
 2. Spawn `core:test-auditor`.
-3. A FAIL from either: spawn a fresh `core:test-writer` with the plan and the findings. At most two fix rounds. Still failing means the Test map or the interfaces in the plan are wrong: take the way back.
+3. A FAIL from either: spawn a fresh `core:test-writer` with the plan and the findings, run step 1 again, then spawn a fresh `core:test-auditor` told it is a fix round and given its last findings. Log every audit under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three audits per task in all, counted across way backs: a way back does not restart them. Findings that show the Test map or the plan's interfaces are wrong: take the way back. A third FAIL: stop and report. The auditor's follow-ups go under the plan's `## Suggested follow-ups`.
 4. Gate passed: commit the test writer's files alone, as `Add failing tests for #<n>`. That commit is the freeze point, and every file in it is frozen, test support included; the build adds its own helpers in new files. Add to Decisions: `Tests frozen at <sha>: <files>. Gate: <n> red for the stated reasons; auditor PASS, round <k>.`
 
 ## 4. Build
@@ -161,13 +161,15 @@ Stop building and revise the plan when:
 
 - A step shows the Approach cannot work, or that a much simpler one exists.
 - A criterion or a frozen test proves wrong or uncheckable.
-- The gate or the review still fails after its rounds, and the plan is the cause.
+- The gate's findings show the Test map or the plan's interfaces are wrong, or the review still fails after its round and the plan is the cause.
 - A performance target is still missed after two attempts.
 - The founder changes what they want.
 
 Ordinary friction is not a trigger: a test that fails inside the approach gets fixed.
 
 On a trigger: say what was learned in a line or two, invoke `core:task` to revise the plan in place (its Revising rules decide whether the founder must approve again), untick the steps the revision invalidates, and resume. A changed Test map goes back through steps 2 and 3, with a new freeze commit.
+
+A revision that takes the task past the task skill's split limits (step 3 there: one deploy target, one new outside service, 15 Test map rows) is a split, not a revision: split it as that step says, keep the first piece in this plan, and say so in the report. Rebuilding an oversized task only grows it.
 
 At most two trips per plan. Count the `Way back:` lines, so the count survives a new session. A third trigger means the problem is not understood: stop and report what each trip taught.
 

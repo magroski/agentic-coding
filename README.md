@@ -25,7 +25,8 @@ plugins/
 
 Agents stop only at the gates: epic approval, one-way doors, merge, deploy, and anything blocked,
 destructive or outside the repo. Merge and deploy can be pre-authorized in the prompt. Retries are
-capped (two test-gate rounds, one review fix round, two trips back to the plan), then they report.
+capped (three test audits per task, one review fix round, two trips back to the plan), then they report.
+Tasks are split before building at more than one deploy target, one new outside service, or 15 test rows.
 Design and decisions: [docs/plans/agentic-workflow/README.md](docs/plans/agentic-workflow/README.md).
 
 ## Use

@@ -103,6 +103,8 @@ You are a lane in <repo>. Invoke the core:build skill for #<n>.
   stop and report the question with your recommended answer.
 - Stop before merging and report the PR as ready to merge. Merging, deploying and
   rolling back are the lead's, whatever the plan or the prompt says.
+- On each way back, send the lead one line with SendMessage to "main": what the
+  trip taught, and the Test map's row count before and after. Then carry on.
 ```
 
 Its completion notice carries the worktree path and branch. A report can arrive as a handback or as a message; accept either.
@@ -110,6 +112,8 @@ Its completion notice carries the worktree path and branch. A report can arrive 
 ### Relay
 
 Batch the lanes' questions into one numbered message to the founder, each with its recommendation. Send each answer back with `SendMessage` to its lane, which resumes it where it stopped.
+
+A lane's way-back line goes in the same batch, with a recommendation: carry on, or split the task when the trip grew its Test map. A split goes to the lane as a message, and the lane splits per the task skill's step 3.
 
 ### Merge, one at a time
 
@@ -123,7 +127,7 @@ As lanes report ready, take them in dependency order, else in the order they bec
 
 Never rebase or force-push a lane's branch.
 
-A lane that fails, or stops after its way-back limit, is reported, not retried.
+A lane that fails, or stops at one of the build skill's limits, is reported, not retried. A way back is reported as it happens (Relay).
 
 ### Finish
 
