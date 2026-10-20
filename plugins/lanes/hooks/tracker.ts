@@ -30,6 +30,7 @@ const TASK_SKILL = 'core:task'
 
 // Helper agent type -> the stage its spawn starts.
 export const HELPER_STAGE: Readonly<Record<string, Stage>> = {
+  'core:map-auditor': 'plan',
   'core:test-writer': 'tests',
   'core:test-auditor': 'gate',
   'core:verifier': 'review',
@@ -61,6 +62,7 @@ const PR_URL = /\/pull\/(\d+)/
 
 // Helper reports, as each agent file spells them.
 const GATE_VERDICT = /^Gate:\s*(PASS|FAIL)/m
+const MAP_VERDICT = /^Map:\s*(PASS|FAIL)/m
 const TEST_ROW = /^\|\s*\d+\s*\|/gm
 const VERDICT_ROW = /^\|[^|\n]*\|[^|\n]*\|\s*(PASS|FAIL)\b/gm
 const MUST_FIX = /\*\*Must fix\*\*/
@@ -95,7 +97,7 @@ export function apply(board: Board, signal: Signal): Board {
     case 'spawn':
       return onSpawn(board, signal)
     case 'turn':
-      return onTurn(board, signal.loopId)
+      return onTurn(board, signal.loopId, signal.at)
     case 'tool':
       return onTool(board, signal)
     case 'output':
@@ -163,6 +165,10 @@ export function summarizeReport(type: string, answer: string): string | undefine
   switch (type) {
     case 'core:test-writer':
       return `${count(answer, TEST_ROW)} failing tests`
+    case 'core:map-auditor': {
+      const verdict = MAP_VERDICT.exec(answer)?.[1]
+      return verdict ? `map ${verdict}` : firstLine(answer)
+    }
     case 'core:test-auditor': {
       const verdict = GATE_VERDICT.exec(answer)?.[1]
       return verdict ? `gate ${verdict}` : firstLine(answer)
@@ -263,13 +269,19 @@ function spawnHelper(lane: Lane, type: string, stage: Stage, at: number): Lane {
 }
 
 // A loop starting a turn is a lane resumed: by the lead's message, or the founder.
-function onTurn(board: Board, loopId: string): Board {
+function onTurn(board: Board, loopId: string, at: number): Board {
   const loop = board.loops[loopId]
   const next = loop ? { ...board, loops: { ...board.loops, [loopId]: { ...loop, isDone: false } } } : board
   const lane = liveLane(next, loopId)
-  if (!lane || lane.loop === MAIN) return next
+  if (lane) return lane.loop === MAIN ? next : withLane(next, lane.id, resume)
 
-  return withLane(next, lane.id, resume)
+  // A finished helper starting a turn was sent its fix round: it counts as a spawn would.
+  if (!loop?.isDone) return next
+  const stage = HELPER_STAGE[loop.type]
+  const owner = liveLane(next, loop.parentId ?? '')
+  if (!stage || !owner) return next
+
+  return withLane(next, owner.id, current => spawnHelper(current, loop.type, stage, at))
 }
 
 function onTool(board: Board, s: Extract<Signal, { kind: 'tool' }>): Board {

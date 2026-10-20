@@ -79,6 +79,25 @@ describe('lanes', () => {
     expect(lane(fixRound)).toMatchObject({ reviewRounds: 2, note: 'fix round' })
   })
 
+  test('a finished helper continued for a fix round counts a new round; its first turn does not', () => {
+    const audited = fold([
+      spawnLane,
+      helper('w1', 'core:test-writer', 1),
+      end('w1', 'Files: a.test.ts', 2),
+      helper('a1', 'core:test-auditor', 3),
+      { kind: 'turn', loopId: 'a1', at: 3 },
+      end('a1', 'Gate: FAIL', 4),
+    ])
+    expect(lane(audited).gateRounds).toBe(1)
+
+    const rewriting = fold([{ kind: 'turn', loopId: 'w1', at: 5 }], audited)
+    expect(stageOf(lane(rewriting))).toBe('tests')
+
+    const reaudit = fold([end('w1', 'Files: a.test.ts', 6), { kind: 'turn', loopId: 'a1', at: 7 }], rewriting)
+    expect(lane(reaudit)).toMatchObject({ gateRounds: 2, note: 'round 2/3' })
+    expect(stageOf(lane(reaudit))).toBe('gate')
+  })
+
   test('planning again past the plan stage counts a way back; planning first does not', () => {
     const planning = fold([spawnLane, skill(LANE, 'core:build', '42', 1), skill(LANE, 'core:task', '42', 2)])
     expect(lane(planning).wayBacks).toBe(0)
@@ -185,6 +204,7 @@ describe('lanes', () => {
   const SUMMARIES = [
     ['core:test-writer', 'Files: a.test.ts\n| C | Test | Fails with |\n| :- | :- | :- |\n| 1 | a | x |\n| 2 | b | y |', '2 failing tests'],
     ['core:test-auditor', 'Suite: npm test: 2 failing\nGate: PASS', 'gate PASS'],
+    ['core:map-auditor', 'Findings:\n1. C2 new: always refuses passes | fix: add a good-input row\n\nFollow-ups: none\nMap: FAIL', 'map FAIL'],
     ['core:verifier', '| # | Criterion | Verdict | Evidence |\n| :- | :- | :- | :- |\n| 1 | a | PASS | ok |\n| 2 | b | FAIL | no |\n| F | Frozen | PASS | empty |', '2/3 pass'],
     ['core:reviewer', '**Must fix**\n1. Null user\n2. Leak\n\n**Follow-ups**\n3. Rename', '2 must fix · 1 follow-ups'],
     ['Explore', '\n## Found it\nmore', 'Found it'],

@@ -59,14 +59,14 @@ Small unknowns are not questions. Decide and record them.
 
 **Goal.** One sentence, then three to eight numbered criteria, each pass/fail and paired with its check: a command, or the exact thing to inspect. Draw them from the issue's acceptance criteria (a bug's expected behavior, a chore's change), the business rules it covers, and the repo's rules (lint, layers, contract). A criterion only production can show, such as "migrates on deploy", is `check-only`.
 
-**Test map.** Every criterion that is not check-only maps to tests:
+**Test map.** Every criterion that is not check-only maps to tests, held to these rules and nothing past them:
 
-- At the highest level the repo supports: end-to-end, then API or feature, then unit.
-- Each test is one behavior, written as given/when/then, with the reason it fails before the build.
-- Each row names the plausible wrong implementation it rules out. Then, per criterion, ask what wrong build would still pass every row; if one comes to mind, add the row that catches it. The test auditor asks the same question at the gate, where each gap costs a round.
+- At the highest level the repo supports: end-to-end, then API or feature, then unit. No unit test of a function with no conditional logic: the API or feature test covers it.
+- Each test is one behavior a user or caller sees, not a line to cover, written as given/when/then with concrete values, and the reason it fails before the build. Two inputs the code receives separately (ids, URLs, tokens) get different values.
+- Each row names the plausible wrong implementation it rules out.
 - A criterion on a trust boundary (sign-in, sessions, tokens, callbacks from outside services, payments, permissions) gets a row for each property an attacker would exploit: cookie flags, state and nonce checks, single-use secrets, values that must match from one request to the next.
-- Happy, sad and edge cases only where there is branching, a boundary or a business rule. No tautologies, no tests of getters or boilerplate.
-- A criterion's tests together fail both an implementation that always succeeds and one that always refuses: a criterion about rejecting bad input also gets a test where good input passes. When that behavior already works today, its row is a guard: its red reason reads `guard: passes before build`, and it must pass, not fail, before the build.
+- A row earns its place only when it validates branching, protects a boundary, or documents a business rule: happy, sad and edge cases where those exist. No tautologies, no tests of boilerplate (DTOs, plain data objects, getters, config).
+- A criterion's rows together fail a fixed list of wrong builds: one that always succeeds, one that always refuses, each row's Rules out, and on a trust boundary each attack above. A wrong build outside the list is not a gap: a bar with no end never passes. Against always-refuses, a criterion about rejecting bad input also gets a test where good input passes. When that behavior already works today, its row is a guard: its red reason reads `guard: passes before build`, and it must pass, not fail, before the build.
 - External dependencies are mocked; time and randomness are injected. Tests are deterministic and fast.
 - A bug's first test reproduces the report.
 
@@ -141,14 +141,20 @@ Leave out Performance when step 6 does not apply. Steps cover the implementation
 
 Every step names its files and layer, and no step lets a layer skip its neighbor. Write tersely: every sentence should change what the builder does.
 
-## 9. Approve
+## 9. Audit the Test map
+
+Spawn `core:map-auditor` as a fresh agent, never a fork, with the plan path: it judges the table without this conversation's reasoning. No test exists yet, so a gap it finds costs an edit here instead of rewritten tests and another audit at the build's gate. Not found: spawn `general-purpose` with `agents/map-auditor.md`, two levels up from this skill's base directory, as its brief.
+
+One audit, no second round: each finding comes with the row that fixes it. Apply each one whose case holds; record each that does not, and why, under Decisions. Log `- Map audit: PASS | FAIL, <one line>` under Decisions, put its follow-ups under `## Suggested follow-ups`, check the split limits again (step 3), then commit and push.
+
+## 10. Approve
 
 - **No one-way door:** set `Status: Approved` and add `- Auto-approved: no one-way doors (YYYY-MM-DD)` to Decisions. Do not wait.
 - **One or more:** keep `Status: Draft`, write each under Decisions as `One-way (open): <decision>; recommend <choice>`, commit and push, and stop. The lines are what `next` and `build` show the founder later. Once the founder decides, rewrite each as `One-way:` and approve.
 
 Comment the plan's path on the issue, so issue and plan link both ways.
 
-## 10. Summarize
+## 11. Summarize
 
 One screen:
 
@@ -156,7 +162,7 @@ One screen:
 Task: #<n> <title> (<Approved | waiting on you>)
 Goal: <one line>
 Criteria: <numbered, one line each>
-Tests: <count> mapped, <count> check-only
+Tests: <count> mapped, <count> check-only; map audit <PASS | FAIL, <n> rows changed>
 Approach: <2-4 bullets>
 One-way doors: <each with the recommended choice, or none>
 Assumed business rules: <each, also added to the epic doc, or none>
@@ -166,5 +172,7 @@ Plan: <path>
 ## Revising
 
 New information reopens a plan, whatever its Status. Change it in place and add a Decisions line: what was learned, and what changed. A revision during a build starts that line with `Way back:`.
+
+Rows a revision adds or changes go through one map audit (step 9): give the auditor their test names, and it checks only those. A plan with no `Map audit:` line in Decisions, written before that step existed, gets a full one.
 
 The founder must approve again only when the revision adds a one-way door. Dropping or weakening a criterion drawn from the issue's acceptance criteria or a business rule changes the founder's product decision, so it goes through the epic doc's Revising instead of being loosened quietly. Other criteria (repo rules, technical checks) are the agent's call, recorded.

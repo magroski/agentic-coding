@@ -24,6 +24,10 @@ Run each test with the repo's command and keep its failure output. Each must fai
 
 Do not commit.
 
+## Fix round
+
+When sent the gate's findings, change only the tests they name, run those again, and report in the same format.
+
 ## Report
 
 ```

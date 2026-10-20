@@ -9,7 +9,7 @@ argument-hint: "<issue number or plan path> [merge and deploy pre-authorized]"
 ```
 plan --> tests first --> gate --> build --> self-check --> review --> PR --> merge --> deploy --> post-deploy
 core:task  test-writer   test-auditor                     verifier          (gate)    (gate)     immediate checks
-                                                          reviewer                               delayed: check issues
+map-auditor                                               reviewer                               delayed: check issues
          <------------- new information: way back to the plan -------------
 ```
 
@@ -19,12 +19,12 @@ The plan file is the shared state. Every stage reads it and writes to it, which 
 
 ## Agents
 
-Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits this conversation, and a checker who read the author's reasoning inherits its blind spots. Give each only what its row lists.
+Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits this conversation, and a checker who read the author's reasoning inherits its blind spots. Give each only what its row lists. A gate fix round continues the same writer and auditor instead (step 3).
 
 | `subagent_type` | Gets |
 | :- | :- |
 | `core:test-writer` | plan path, Delivery's test commands, the closest existing test file as the style example |
-| `core:test-auditor` | plan path, the test files, Delivery's test commands, the pre-existing failures recorded in the plan |
+| `core:test-auditor` | plan path, the test files, Delivery's test commands |
 | `core:verifier` | diff command, the plan's criteria that are not check-only, verbatim, the freeze commit and its files |
 | `core:reviewer` | diff command, plan path, Delivery's expected load; in a fix round, the previous Must fix list |
 
@@ -50,7 +50,7 @@ The design also sets limits that end in a report: three test audits per task (co
 | An issue or request with no plan | 1, which plans it |
 | `Status: Draft` with `One-way (open)` lines | Show them, each with its recommendation, and stop. |
 | `Status: Draft` without them | 1: `core:task` finishes the plan. |
-| `Status: Approved` with no `## Test map` (an older plan) | 1: `core:task` revises it first. |
+| `Status: Approved` with no `## Test map` or no `Map audit:` line (an older plan) | 1: `core:task` revises or audits it first. |
 | `Status: Approved` | 1 |
 | `Status: In progress` | Resume. Compare the branch's commits with the plan: no freeze commit in Decisions means step 2 or 3; otherwise the first unticked step. A step left half done is finished, not redone. |
 | `Status: Done`, no PR | 7.3 |
@@ -63,7 +63,7 @@ The design also sets limits that end in a report: three test audits per task (co
 - **Fetch** first: `git fetch origin`. Everything below works from the remote's state.
 - **Delivery.** In a lane, run the Delivery section's worktree setup before anything else, since planning may reproduce a bug or measure a baseline. No Delivery section: outside a lane, use the facts the plan's Context records; in a lane, stop as blocked and ask for `/core:setup`, since a lane without its own stack fights the main one for ports.
 - **Branch.** Check out the task's branch, `<type>/<n>-<slug>`, from the remote if it exists there; else create it from `origin/<default branch>`. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. An issue reopened after a rollback never reuses its merged branch, which the revert undoes: create `<type>/<n>-<slug>-<k>` from `origin/<default branch>` and copy the plan in from the merged branch (`git checkout origin/<merged branch> -- <plan>`), so its decisions and way-back count survive.
-- **Plan.** None, Draft, without a Test map, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
+- **Plan.** None, Draft, without a Test map or a `Map audit:` line, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
 - Set `Status: In progress`, commit, push.
 - **Baseline.** Run the full suite. Tests already failing are recorded under Decisions as pre-existing and left out of every later "still green" check. Measure the performance baseline if the plan has one without a value.
 
@@ -73,9 +73,11 @@ Spawn `core:test-writer`. It writes the Test map's tests and runs them. It does 
 
 ## 3. Gate
 
+The Test map was audited when it was planned. This gate checks only that the tests are that map: each row written as stated, red for its reason, and sound.
+
 1. Run each new test yourself. Each fails, and its output matches the reason in the Test map; guard rows pass. The rest of the suite is unchanged.
 2. Spawn `core:test-auditor`.
-3. A FAIL from either: spawn a fresh `core:test-writer` with the plan and the findings, run step 1 again, then spawn a fresh `core:test-auditor` told it is a fix round and given its last findings. Log every audit under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three audits per task in all, counted across way backs: a way back does not restart them. Findings that show the Test map or the plan's interfaces are wrong: take the way back. A third FAIL: stop and report. The auditor's follow-ups go under the plan's `## Suggested follow-ups`.
+3. A FAIL from either: send the findings to the same `core:test-writer` with `SendMessage`, run step 1 again, then send the same `core:test-auditor` its fix round. Both keep what they already read, so neither starts over, and they stay separate agents. One that cannot be continued (a new session) is spawned fresh, given the plan and the findings. Log every audit under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three audits per task in all, counted across way backs: a way back does not restart them. A row that cannot be written as stated, or an interface the plan names wrongly: take the way back. A third FAIL: stop and report. The auditor's follow-ups go under the plan's `## Suggested follow-ups`.
 4. Gate passed: commit the test writer's files alone, as `Add failing tests for #<n>`. That commit is the freeze point, and every file in it is frozen, test support included; the build adds its own helpers in new files. Add to Decisions: `Tests frozen at <sha>: <files>. Gate: <n> red for the stated reasons; auditor PASS, round <k>.`
 
 ## 4. Build
@@ -161,7 +163,7 @@ Stop building and revise the plan when:
 
 - A step shows the Approach cannot work, or that a much simpler one exists.
 - A criterion or a frozen test proves wrong or uncheckable.
-- The gate's findings show the Test map or the plan's interfaces are wrong, or the review still fails after its round and the plan is the cause.
+- The gate finds a row that cannot be written as stated or an interface the plan names wrongly, or the review still fails after its round and the plan is the cause.
 - A performance target is still missed after two attempts.
 - The founder changes what they want.
 
