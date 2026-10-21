@@ -13,7 +13,7 @@ map-auditor                                               reviewer              
          <------------- new information: way back to the plan -------------
 ```
 
-The founder is not watching. What makes that safe: tests written before the code by an agent that will not write the code, a gate on those tests, code that must pass them unchanged, and checks by agents that did not write either.
+Past the plan's interview, the founder is not watching. What makes that safe: tests written before the code by an agent that will not write the code, a gate on those tests, code that must pass them unchanged, and checks by agents that did not write either.
 
 The plan file is the shared state. Every stage reads it and writes to it, which is what lets a later session or another lane pick the work up.
 
@@ -34,13 +34,14 @@ If an agent type is not found, spawn `general-purpose` with that agent's file as
 
 Stop only for these. Everything else is decided, recorded under the plan's Decisions, and the work moves on.
 
+- The task interview, while planning (the `task` skill's step 3).
 - A one-way door: impossible or costly to undo (see the `task` skill).
 - Merging to the default branch, and a deploy that does not follow merge automatically. Skip both when the prompt pre-authorizes them, except while a criterion is Disputed: that is the founder's ruling either way.
 - Cannot continue without the founder; anything destructive; anything outside the repo.
 
 The design also sets limits that end in a report: three test audits per task (counted across way backs), one review fix round, two attempts at a red CI or a missed check, two trips back to the plan.
 
-**As a lane** (the prompt says so), the founder is reached only through the lead: return a question instead of stopping on it, and stop before merging.
+**As a lane** (the prompt says so), the founder is reached only through the lead: return a question instead of stopping on it, and stop before merging. The task interview is returned the same way, and planning resumes when the answers arrive.
 
 ## Where to start
 
@@ -48,9 +49,9 @@ The design also sets limits that end in a report: three test audits per task (co
 | :- | :- |
 | The issue is open but its PR is merged: reopened after a rollback | 1, on a new branch (see Branch) |
 | An issue or request with no plan | 1, which plans it |
-| `Status: Draft` with `One-way (open)` lines | Show them, each with its recommendation, and stop. |
+| `Status: Draft` with `One-way (open)` or `Interview (open)` lines | Answers in the prompt or the plan: 1, and `core:task` records them. Else show them, each with its recommendation, and stop. |
 | `Status: Draft` without them | 1: `core:task` finishes the plan. |
-| `Status: Approved` with no `## Test map` or no `Map audit:` line (an older plan) | 1: `core:task` revises or audits it first. |
+| `Status: Approved` with no `## Test map`, no `Map audit:` line or no `Outcome confirmed` line (an older plan) | 1: `core:task` revises, audits or interviews first. |
 | `Status: Approved` | 1 |
 | `Status: In progress` | Resume. Compare the branch's commits with the plan: no freeze commit in Decisions means step 2 or 3; otherwise the first unticked step. A step left half done is finished, not redone. |
 | `Status: Done`, no PR | 7.3 |
@@ -63,7 +64,7 @@ The design also sets limits that end in a report: three test audits per task (co
 - **Fetch** first: `git fetch origin`. Everything below works from the remote's state.
 - **Delivery.** In a lane, run the Delivery section's worktree setup before anything else, since planning may reproduce a bug or measure a baseline. No Delivery section: outside a lane, use the facts the plan's Context records; in a lane, stop as blocked and ask for `/core:setup`, since a lane without its own stack fights the main one for ports.
 - **Branch.** Check out the task's branch, `<type>/<n>-<slug>`, from the remote if it exists there; else create it from `origin/<default branch>`. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. An issue reopened after a rollback never reuses its merged branch, which the revert undoes: create `<type>/<n>-<slug>-<k>` from `origin/<default branch>` and copy the plan in from the merged branch (`git checkout origin/<merged branch> -- <plan>`), so its decisions and way-back count survive.
-- **Plan.** None, Draft, without a Test map or a `Map audit:` line, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
+- **Plan.** None, Draft, without a Test map, a `Map audit:` line or an `Outcome confirmed` line, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
 - Set `Status: In progress`, commit, push.
 - **Baseline.** Run the full suite. Tests already failing are recorded under Decisions as pre-existing and left out of every later "still green" check. Measure the performance baseline if the plan has one without a value.
 
@@ -125,7 +126,7 @@ Still failing after that round: when the plan is the cause, take the way back; o
 ```markdown
 <What it does, two or three sentences, in the product's language.>
 
-Closes #<n> · Plan: `<path>`
+Closes #<n> · Closes #<m>, for each `Joins #<m>` in the issue · Plan: `<path>`
 
 ## Criteria
 | # | Criterion | Verdict | Evidence |
@@ -171,7 +172,7 @@ Ordinary friction is not a trigger: a test that fails inside the approach gets f
 
 On a trigger: say what was learned in a line or two, invoke `core:task` to revise the plan in place (its Revising rules decide whether the founder must approve again), untick the steps the revision invalidates, and resume. A changed Test map goes back through steps 2 and 3, with a new freeze commit.
 
-A revision that takes the task past the task skill's split limits (step 3 there: one deploy target, one new outside service, 15 Test map rows) is a split, not a revision: split it as that step says, keep the first piece in this plan, and say so in the report. Rebuilding an oversized task only grows it.
+A revision that takes the task past the task skill's split limits (step 4 there: 15 Test map rows, one new outside service) is a split, not a revision: split it as that step says, keep the first piece in this plan, and say so in the report. Rebuilding an oversized task only grows it.
 
 At most two trips per plan. Count the `Way back:` lines, so the count survives a new session. A third trigger means the problem is not understood: stop and report what each trip taught.
 

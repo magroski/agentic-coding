@@ -16,17 +16,18 @@ plugins/
 ```
 /core:setup   once per repo: issue types, labels, forms, and the Delivery facts every skill reads
 /core:epic    product planning: outcome, business rules, metrics, scope -> epic doc, milestone, issues
-/core:task    technical planning: approach, criteria, audited test map, post-deploy checks -> task plan
+/core:task    task planning: outcome interview, approach, criteria, audited test map, checks -> task plan
 /core:build   one task: tests first, gated -> code -> verifier + reviewer -> PR -> merge -> deploy -> checks
 /core:next    daily brief: due checks, what needs you, ready lanes; then leads lanes in parallel
 /core:file-issue  one issue in the repo's format
 /lanes        live view of each lane: stage, helper agents, current call (plugin `lanes`)
 ```
 
-Agents stop only at the gates: epic approval, one-way doors, merge, deploy, and anything blocked,
+Agents stop only at the gates: epic approval, each task's outcome interview, one-way doors, merge, deploy, and anything blocked,
 destructive or outside the repo. Merge and deploy can be pre-authorized in the prompt. Retries are
 capped (three test audits per task, one review fix round, two trips back to the plan), then they report.
-Tasks are split before building at more than one deploy target, one new outside service, or 15 test rows.
+Tasks are split before building at 15 test rows or more than one new outside service; small ones in a lane are joined.
+Epics are built in roadmap order, each only once it is approved with business rules and issues.
 Design and decisions: [docs/plans/agentic-workflow/README.md](docs/plans/agentic-workflow/README.md).
 
 ## Use
