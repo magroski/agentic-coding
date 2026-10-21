@@ -101,6 +101,33 @@ test("a lane's row opens its detail, and back returns to the list", async ($, on
   }
 })
 
+test('/lanes clear drops finished lanes from the pane and keeps the running one', async ($, on) => {
+  mock.clock(on, { now: 0 })
+  engine(on, [LANE, 'lane-2'])
+  await $.agent.spawn(spawn({ prompt: LANE_PROMPT, subagentType: 'general-purpose' }))
+  await $.agent.spawn(spawn({ prompt: 'You are a lane in acme. Invoke the core:build skill for #43.', subagentType: 'general-purpose' }))
+  await $.turn.complete({
+    agentId: 'lane-2',
+    answer: 'Built: #43 Refunds · https://x/pull/115 · merged and deployed',
+    durationMs: 1,
+    isAborted: false,
+    turnId: 'turn_1',
+    reason: 'answer',
+  })
+
+  const cleared = await $.command.run({
+    command: 'lanes',
+    args: 'clear',
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 80 },
+  })
+  expect(cleared.text).toBe('Finished lanes cleared: 1.')
+
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: /running/ }))?.text).toBe('1 running')
+  await ui.unmount()
+})
+
 test('with no lane the band leaves its space to the engine', async ($, on) => {
   on('ui.render', ($, e) => {
     const { Text } = $.ui.resolve(e)

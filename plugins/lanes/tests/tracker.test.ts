@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
 
 import type { Board, Lane } from '../types'
-import { EMPTY, MAIN, apply, describeCall, parsePlan, stageOf, summarizeReport } from '../hooks/tracker'
+import { EMPTY, MAIN, apply, clearFinished, describeCall, helpersOf, parsePlan, stageOf, summarizeReport } from '../hooks/tracker'
 import type { Signal } from '../hooks/tracker'
 
 const LANE = 'lane-1'
@@ -128,6 +128,36 @@ describe('lanes', () => {
     expect(stageOf(lane(merged))).toBe('ship')
   })
 
+  // gh's rows as a lane's Bash sees them, from a run where only Vercel's daily cap failed.
+  const VERCEL_CAPPED = 'Vercel\tfail\t0\thttps://vercel.com/acme?upgradeToPro=build-rate-limit\tDeployment rate limited — retry in 24 hours.'
+  const CHECK_PASSED = 'check\tpass\t1m5s\thttps://github.com/acme/app/actions/runs/1/job/2\t'
+  const CHECKS = [
+    ['watched to the end', [VERCEL_CAPPED, CHECK_PASSED, 'Refreshing checks status every 20 seconds. Press Ctrl+C to quit.', '', VERCEL_CAPPED, CHECK_PASSED], true],
+    ['piped through tail, which exits 0', [VERCEL_CAPPED, CHECK_PASSED], false],
+  ] as const
+  for (const [how, rows, isError] of CHECKS) {
+    test(`CI names the check that failed when ${how}`, () => {
+      const board = fold([spawnLane, bashOutput(LANE, 'gh pr checks 114 --watch 2>&1 | tail -4', rows.join('\n'), isError, 1)])
+
+      expect(lane(board).note).toBe('CI red: Vercel')
+    })
+  }
+
+  test("the lead's post-deploy comment on a lane's PR finishes that lane; one naming no PR does not", () => {
+    const merged = fold([
+      spawnLane,
+      bashOutput(LANE, 'gh pr create --fill', 'https://github.com/acme/app/pull/114\n', false, 1),
+      bashOutput(MAIN, 'gh pr merge 114 --squash', '', false, 2),
+    ])
+
+    const unnamed = fold([bash(MAIN, 'post() { gh pr comment $1 --body "Post-deploy: pass"; }; post 114', 3)], merged)
+    expect(stageOf(lane(unnamed))).toBe('ship')
+
+    const posted = fold([bash(MAIN, 'gh pr comment 114 --body "Post-deploy: immediate checks pass."', 3)], merged)
+    expect(lane(posted).state).toBe('done')
+    expect(stageOf(lane(posted))).toBe('post')
+  })
+
   const REPORTS = [
     ['Built: #42 Invoice export · https://x/pull/114 · ready to merge\nNeeds you: nothing', 'ready', 'merge', undefined],
     ['Built: #42 Invoice export · https://x/pull/114 · merged and deployed', 'done', 'post', undefined],
@@ -164,6 +194,105 @@ describe('lanes', () => {
       [`${MAIN}:42`, 42],
       [MAIN, 48],
     ])
+  })
+
+  test("a finished task lists its own helpers, not those of the loop's next task", () => {
+    const board = fold([
+      spawnLane,
+      helper('w1', 'core:test-writer', 1),
+      skill(LANE, 'core:build', '48', 2),
+      helper('w2', 'core:test-writer', 3),
+    ])
+
+    expect(helpersOf(board, lane(board, `${LANE}:42`)).map(loop => loop.id)).toEqual(['w1'])
+    expect(helpersOf(board, lane(board)).map(loop => loop.id)).toEqual(['w2'])
+  })
+
+  test("a lead's lane prompt to a running lane continues its row, on the same issue or the next", () => {
+    const resumed = fold([
+      spawnLane,
+      helper('w1', 'core:test-writer', 1),
+      { ...spawnLane, prompt: 'Founder answered: Postgres. Invoke the core:build skill for #42.', at: 2 },
+    ])
+    expect(resumed.lanes).toHaveLength(1)
+    expect(lane(resumed)).toMatchObject({ issue: 42, then: 48 })
+    expect(stageOf(lane(resumed))).toBe('tests')
+
+    const movedOn = fold(
+      [
+        { ...spawnLane, prompt: '#114 is merged. Next: invoke the core:build skill for #48. This lane then builds #50.', at: 3 },
+        skill(LANE, 'core:build', '48', 4),
+      ],
+      resumed,
+    )
+    expect(movedOn.lanes.map(one => [one.id, one.issue, one.then])).toEqual([
+      [`${LANE}:42`, 42, 48],
+      [LANE, 48, 50],
+    ])
+  })
+
+  // Replays a core:next lead from 2026-10-20: it resumed finished lanes with
+  // SendMessage, which reaches the tracker as a spawn carrying the message,
+  // then merged each PR and posted every post-deploy itself.
+  test('a lead resuming lanes, merging and post-deploying lists each issue once, done at post', () => {
+    let clock = 0
+    const at = () => ++clock
+    const resume = (id: string, prompt: string): Signal => ({ kind: 'spawn', id, parentId: MAIN, type: 'general-purpose', description: `Lane ${id}`, prompt, at: at() })
+    const build = (id: string, issue: number) => skill(id, 'core:build', String(issue), at())
+    const opened = (id: string, pr: number) => bashOutput(id, 'gh pr create --fill', `https://github.com/o/r/pull/${pr}`, false, at())
+    const report = (id: string, answer: string) => end(id, answer, at())
+    const merge = (pr: number) => bashOutput(MAIN, `gh pr merge ${pr} --squash`, '', false, at())
+    const postDeploy = (pr: number) => bash(MAIN, `gh pr comment ${pr} --body "Post-deploy: immediate checks pass."`, at())
+
+    const board = fold([
+      resume('A', 'You are a lane. Invoke the core:build skill for #86.\n(This lane then builds #87, once #86 is merged and you are resumed.)'),
+      build('A', 86), opened('A', 90), report('A', 'Built: #86 Keep it · https://x/pull/90 · ready to merge\nNeeds you: nothing.'),
+      resume('A', 'The default branch moved: merge it in, rerun the suite, push, wait for CI, report.'),
+      report('A', 'PR #90 is up to date with main and ready to merge.\nNeeds you: nothing.'),
+      merge(90),
+      resume('A', '#90 is merged. Start #87 now from the updated default branch.'),
+      build('A', 87), opened('A', 94), report('A', '#87 is ready to merge as PR #94.\nNeeds you: only the triage.'),
+      merge(94),
+      resume('A', '#94 is merged. Next: invoke the core:build skill for #91. This lane then builds #80, once #91 is merged.'),
+      build('A', 91), opened('A', 96), report('A', '#91 is ready to merge as PR #96.\nNeeds you: one fact.'),
+      merge(96),
+      resume('A', '#96 is merged. Next: invoke the core:build skill for #80.'),
+      build('A', 80), opened('A', 101), report('A', '#80 is ready to merge as PR #101.\nNeeds you: nothing.'),
+      merge(101),
+      resume('C', 'You are a lane. Invoke the core:build skill for #81.\n(This lane then builds #82, once #81 is merged and you are resumed.)'),
+      build('C', 81), opened('C', 97), report('C', 'Built: #81 Wizard · https://x/pull/97 · ready to merge\nNeeds you: nothing.'),
+      merge(97),
+      resume('C', '#97 is merged. Next: invoke the core:build skill for #82 (her photo).'),
+      build('C', 82), opened('C', 115), report('C', '#82 is ready to merge: https://x/pull/115.\nNeeds you: nothing for the founder.'),
+      merge(115),
+      resume('C', 'The founder decided. Invoke the core:build skill for #102.'),
+      build('C', 102),
+      ...[90, 94, 96, 101, 97, 115].map(postDeploy),
+    ])
+
+    expect(board.lanes.map(one => [one.id, one.issue, stageOf(one), one.state])).toEqual([
+      ['A:86', 86, 'post', 'done'],
+      ['A:87', 87, 'post', 'done'],
+      ['A:91', 91, 'post', 'done'],
+      ['A', 80, 'post', 'done'],
+      ['C:81', 81, 'post', 'done'],
+      ['C:82', 82, 'post', 'done'],
+      ['C', 102, 'plan', 'running'],
+    ])
+  })
+
+  test('clearing drops merged and done lanes and keeps one waiting for its merge', () => {
+    const board = fold([
+      spawnLane,
+      bashOutput(LANE, 'gh pr create --fill', 'https://github.com/acme/app/pull/114', false, 1),
+      bashOutput(MAIN, 'gh pr merge 114 --squash', '', false, 2),
+      { ...spawnLane, id: 'lane-2', prompt: 'Invoke the core:build skill for #43.', at: 3 },
+      end('lane-2', 'Built: #43 Refunds · https://x/pull/115 · ready to merge', 4),
+      { ...spawnLane, id: 'lane-3', prompt: 'Invoke the core:build skill for #44.', at: 5 },
+      end('lane-3', 'Built: #44 Receipts · https://x/pull/116 · merged and deployed', 6),
+    ])
+
+    expect(clearFinished(board).lanes.map(one => one.id)).toEqual(['lane-2'])
   })
 
   test('a plan the lane touches names it and counts its steps', () => {

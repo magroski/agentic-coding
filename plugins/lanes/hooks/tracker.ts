@@ -13,6 +13,9 @@ import type { Board, Lane, LaneState, Loop, Stage } from '../types'
 // one stage: no tool call tells them apart.
 export const STAGES: readonly Stage[] = ['plan', 'tests', 'gate', 'build', 'review', 'pr', 'merge', 'ship', 'post']
 
+// Stages after the PR merged.
+const MERGED: ReadonlySet<Stage> = new Set(['ship', 'post'])
+
 // Loop id of the main conversation, whose events carry no agentId.
 export const MAIN = 'main'
 
@@ -58,7 +61,10 @@ const GH_PR_CREATE = /\bgh pr create\b/
 const GH_PR_CHECKS = /\bgh pr checks\b/
 const GH_PR_MERGE = /\bgh pr merge\b(?:\s+#?(\d+))?/
 const GH_POST_DEPLOY = /\bgh pr comment\b[\s\S]*Post-deploy:/
+const GH_COMMENT_PR = /\bgh pr comment\s+#?(\d+)\b/
 const PR_URL = /\/pull\/(\d+)/
+// A failed row of `gh pr checks` off a terminal: "Vercel\tfail\t0\t<url>\tDeployment rate limited".
+const CHECK_FAILED = /^([^\t\n]+)\tfail\t/gm
 
 // Helper reports, as each agent file spells them.
 const GATE_VERDICT = /^Gate:\s*(PASS|FAIL)/m
@@ -122,10 +128,15 @@ export function laneOf(board: Board, loopId: string): Lane | undefined {
   return parentId === undefined ? undefined : liveLane(board, parentId)
 }
 
-// Helpers a lane spawned for its current task, oldest first.
+// Helpers a lane spawned for its own task, oldest first. A finished task's
+// helpers stop where its loop's next task began.
 export function helpersOf(board: Board, lane: Lane): Loop[] {
+  const until = Math.min(
+    ...board.lanes.filter(other => other.loop === lane.loop && other.startedAt > lane.startedAt).map(other => other.startedAt),
+  )
+
   return Object.values(board.loops)
-    .filter(loop => loop.parentId === lane.loop && loop.startedAt >= lane.startedAt)
+    .filter(loop => loop.parentId === lane.loop && loop.startedAt >= lane.startedAt && loop.startedAt < until)
     .sort((a, b) => a.startedAt - b.startedAt)
 }
 
@@ -136,6 +147,12 @@ export function otherAgents(board: Board): Loop[] {
   return Object.values(board.loops).filter(
     loop => loop.id !== MAIN && !loop.isDone && !lanes.has(loop.id) && !lanes.has(loop.parentId ?? ''),
   )
+}
+
+// Drops lanes whose PR is merged or that are done, for a long-lived board;
+// a lane still building or waiting on a merge stays.
+export function clearFinished(board: Board): Board {
+  return { ...board, lanes: board.lanes.filter(lane => lane.state !== 'done' && !MERGED.has(stageOf(lane))) }
 }
 
 // One line for a tool call: "Read src/auth/session.ts", "npm test -- invoices".
@@ -239,7 +256,11 @@ function onSpawn(board: Board, s: Extract<Signal, { kind: 'spawn' }>): Board {
   const issue = toNumber(LANE_ISSUE.exec(s.prompt)?.[1])
   if (issue !== undefined) {
     const then = toNumber(LANE_THEN.exec(s.prompt)?.[1])
-    return { ...next, lanes: [...next.lanes, newLane(s.id, s.at, { issue, title: s.description, then })] }
+    if (!liveLane(next, s.id)) return { ...next, lanes: [...next.lanes, newLane(s.id, s.at, { issue, title: s.description, then })] }
+
+    // The lead resuming its lane with SendMessage: the same row goes on, and
+    // moves to a new one when the message names the next issue.
+    return withLane(startBuild(next, s.id, issue, s.at), s.id, lane => ({ ...lane, then: then ?? lane.then }))
   }
 
   const stage = HELPER_STAGE[s.type]
@@ -333,9 +354,10 @@ function startPlanning(board: Board, loopId: string, issue: number | undefined, 
 }
 
 function onCommand(board: Board, loopId: string, command: string, at: number): Board {
+  if (GH_POST_DEPLOY.test(command)) return onPostDeploy(board, loopId, toNumber(GH_COMMENT_PR.exec(command)?.[1]), at)
+
   const lane = laneOf(board, loopId)
   if (!lane) return board
-  if (GH_POST_DEPLOY.test(command)) return withLane(board, lane.id, current => advance(current, 'post', at))
   if (GH_PR_CREATE.test(command)) return withLane(board, lane.id, current => advance(current, 'pr', at))
   if (GH_PR_CHECKS.test(command)) return withLane(board, lane.id, current => ({ ...advance(current, 'pr', at), note: 'CI' }))
 
@@ -357,10 +379,19 @@ function onOutput(board: Board, s: Extract<Signal, { kind: 'output' }>): Board {
     return pr === undefined ? board : withLane(board, lane.id, current => ({ ...current, pr }))
   }
   if (GH_PR_CHECKS.test(command)) {
-    return withLane(board, lane.id, current => ({ ...current, note: s.isError ? 'CI red' : 'CI green' }))
+    return withLane(board, lane.id, current => ({ ...current, note: ciNote(s.text, s.isError) }))
   }
 
   return board
+}
+
+// CI's verdict names what failed, so a deploy provider's cap reads apart from
+// a failing test: "CI red: Vercel". Rows win over the exit code, which a pipe hides.
+function ciNote(text: string, isError: boolean): string {
+  const failed = new Set([...text.matchAll(CHECK_FAILED)].map(match => match[1]))
+  if (failed.size > 0) return `CI red: ${[...failed].join(', ')}`
+
+  return isError ? 'CI red' : 'CI green'
 }
 
 // The lead merges a lane's PR by number; a build in the main loop merges its own.
@@ -369,6 +400,15 @@ function onMerge(board: Board, loopId: string, pr: number | undefined, at: numbe
   if (!lane) return board
 
   return withLane(board, lane.id, current => advance(current, 'ship', at))
+}
+
+// The post-deploy comment is a build's last step, whoever posts it: the lead
+// names the lane's PR; a comment naming none belongs to the loop's own lane.
+function onPostDeploy(board: Board, loopId: string, pr: number | undefined, at: number): Board {
+  const lane = pr === undefined ? laneOf(board, loopId) : board.lanes.find(current => current.pr === pr)
+  if (!lane) return board
+
+  return withLane(board, lane.id, current => ({ ...moveTo(current, 'post', at), state: 'done', question: undefined }))
 }
 
 function onPlan(board: Board, s: Extract<Signal, { kind: 'plan' }>): Board {
