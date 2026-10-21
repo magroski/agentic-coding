@@ -1,6 +1,6 @@
 ---
 name: next
-description: Start the day on the current repo - read milestones, issues, PRs, due checks, plans in progress and untriaged follow-ups, run the checks that are due, and brief the founder in one screen on what needs them, what is moving and what is ready, grouped into parallel lanes. On the founder's go, act as team lead - run each lane as a background agent in its own worktree with the build skill, relay their questions, merge their PRs one at a time and see each deploy through. Use when the user invokes it, or asks what's next, what to work on, for a status or morning brief, or to run tasks in parallel.
+description: Start the day on the current repo - read milestones, issues, PRs, due checks, plans in progress and untriaged follow-ups, run the checks that are due, and brief the founder in one screen on what needs them, what is moving and what is ready, grouped into parallel lanes. On the founder's go, act as team lead - run each task as a fresh background agent in its own worktree with the build skill, relay their questions, merge their PRs one at a time and see each deploy through. Use when the user invokes it, or asks what's next, what to work on, for a status or morning brief, or to run tasks in parallel.
 argument-hint: "[merge and deploy pre-authorized]"
 ---
 
@@ -50,7 +50,7 @@ Close the milestone of any `Done` epic once it has no open issues left.
 
 ## 4. Find ready work
 
-Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, whose dependencies in the epic's Order are closed, and that no lane of this session is building. A planned or interrupted task is ready: its lane resumes from the plan, through the build skill's Where to start. A green PR waiting only for merge goes under Needs you instead.
+Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, whose dependencies in the epic's Order are closed, and that no lane of this session is building. A planned or interrupted task is ready: a fresh agent picks it up from the plan, through the build skill's Where to start. A green PR waiting only for merge goes under Needs you instead.
 
 Group it into lanes, at most three unless the founder says otherwise. Two tasks share a lane, in dependency order, when one depends on the other or when they touch the same files or migrations: judge from their plans' Steps and Test map when plans exist, else from the issues and the epic doc. Bugs first, then the current epic's tasks in its Order, then the rest.
 
@@ -93,12 +93,12 @@ On the founder's go, for the lanes they pick. No `## Delivery` section: launch n
 
 ### Launch
 
-One agent per lane, all in one message so they start together: Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`. They run in the background.
+One fresh agent per task, never given a second task. Start each lane's first task, all in one message so they start together: Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`. They run in the background.
 
 ```
 You are a lane in <repo>. Invoke the core:build skill for #<n>.
-(This lane then builds #<m>, once #<n> is merged and you are resumed.)
 
+- Build #<n> only. Another issue is never yours, even if a later message names one.
 - You cannot ask the founder. At a one-way door, or anything else that needs them,
   stop and report the question with your recommended answer.
 - Stop before merging and report the PR as ready to merge. Merging, deploying and
@@ -108,6 +108,8 @@ You are a lane in <repo>. Invoke the core:build skill for #<n>.
 ```
 
 Its completion notice carries the worktree path and branch. A report can arrive as a handback or as a message; accept either.
+
+A lane's next task, and any task that becomes ready later, gets its own fresh agent with this prompt (Merge, step 4). Never send a lane agent, running or finished, another issue: the plan is written for an agent with no other context, and a reused one builds from the last task's instead. `SendMessage` to a lane carries only its own task: answers, splits, merge-ins and its post-deploy.
 
 ### Relay
 
@@ -122,7 +124,7 @@ As lanes report ready, take them in dependency order, else in the order they bec
 1. **Up to date.** `git fetch origin`, then `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. GitHub's own merge state reports a stale branch only under branch protection, so do not rely on it. Not an ancestor: resume the lane with `The default branch moved: merge it in, rerun the suite, push, wait for CI, report.` and take the next ready one meanwhile.
 2. **Merge** at the gate, unless the founder pre-authorized merging and nothing is Disputed. The repo's usual merge method.
 3. **Deploy** per Delivery: wait for the live signal. A manual deploy is its own gate, unless the founder pre-authorized deploying, and runs from a fresh checkout of the default branch, as the build skill's step 8 says.
-4. **Resume the lane:** `Merged and deployed: run the build skill's post-deploy, then report. If this lane has a next issue, start it from the updated default branch.`
+4. **Resume the lane:** `Merged and deployed: run the build skill's post-deploy, then report.` Once its checks pass, launch the lane's next task, if any, as a new agent (Launch).
 5. **Its immediate checks fail:** if merging was pre-authorized, roll back per Delivery's Rollback line and reopen the issue with a comment linking the rollback and the evidence; else put the rollback under Needs you. Hold the merge queue until it is settled.
 
 Never rebase or force-push a lane's branch.
@@ -131,4 +133,4 @@ A lane that fails, or stops at one of the build skill's limits, is reported, not
 
 ### Finish
 
-When every lane is merged, stopped or failed, report one screen: per lane, the PRs, their state, the checks filed and the suggested follow-ups, which go to triage. Remove the worktrees of merged lanes with `git worktree remove` once their agents have ended.
+When every lane is merged, stopped or failed, report one screen: per lane, the PRs, their state, the checks filed and the suggested follow-ups, which go to triage. Remove the worktrees of merged tasks with `git worktree remove` once their agents have ended.
