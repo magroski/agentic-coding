@@ -41,7 +41,7 @@ Then finish interrupted post-deploys: for each merged PR with a `Plan:` line and
 
 ## 3. Close out epics
 
-Task issues are an epic's `feature`, `chore`, `bug` and `research` issues. When every task issue in the current epic's milestone is closed and its doc is not `Done`, spawn a fresh `core:verifier` with the exit criteria that can be checked now, and the default branch and production as the output (if the type is not found: `general-purpose` with `agents/verifier.md`, two levels up from this skill's base directory, as the brief).
+Task issues are an epic's `feature`, `chore`, `bug` and `research` issues. When every task issue in the current epic's milestone is closed and its doc is not `Done`, spawn a fresh `core:verifier` with the exit criteria that can be checked now, and the default branch and production as the output (if the type is not found: `general-purpose` with `agents/verifier.md`, two levels up from this skill's base directory, as the brief, with the `model` and `effort` its frontmatter names).
 
 - All pass: offer the close-out under Needs you, as a docs-only PR setting the epic `Done`.
 - A FAIL, or a criterion only the founder can check: under Needs you, with the evidence.

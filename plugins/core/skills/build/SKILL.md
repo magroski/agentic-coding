@@ -28,7 +28,7 @@ Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits t
 | `core:verifier` | diff command, the plan's criteria that are not check-only, verbatim, the freeze commit and its files |
 | `core:reviewer` | diff command, plan path, Delivery's expected load; in a fix round, the previous Must fix list |
 
-If an agent type is not found, spawn `general-purpose` with that agent's file as the brief: `agents/<name>.md`, two levels up from this skill's base directory.
+If an agent type is not found, spawn `general-purpose` with that agent's file as the brief: `agents/<name>.md`, two levels up from this skill's base directory. Pass the `model` and `effort` its frontmatter names: `general-purpose` would inherit this session's instead.
 
 ## Gates
 

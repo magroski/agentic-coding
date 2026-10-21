@@ -143,7 +143,7 @@ Every step names its files and layer, and no step lets a layer skip its neighbor
 
 ## 9. Audit the Test map
 
-Spawn `core:map-auditor` as a fresh agent, never a fork, with the plan path: it judges the table without this conversation's reasoning. No test exists yet, so a gap it finds costs an edit here instead of rewritten tests and another audit at the build's gate. Not found: spawn `general-purpose` with `agents/map-auditor.md`, two levels up from this skill's base directory, as its brief.
+Spawn `core:map-auditor` as a fresh agent, never a fork, with the plan path: it judges the table without this conversation's reasoning. No test exists yet, so a gap it finds costs an edit here instead of rewritten tests and another audit at the build's gate. Not found: spawn `general-purpose` with `agents/map-auditor.md`, two levels up from this skill's base directory, as its brief, with the `model` and `effort` its frontmatter names.
 
 One audit, no second round: each finding comes with the row that fixes it. Apply each one whose case holds; record each that does not, and why, under Decisions. Log `- Map audit: PASS | FAIL, <one line>` under Decisions, put its follow-ups under `## Suggested follow-ups`, check the split limits again (step 3), then commit and push.
 
