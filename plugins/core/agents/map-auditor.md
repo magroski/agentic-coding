@@ -24,7 +24,7 @@ Hold the map to these rules and nothing past them. A bar with no end never passe
 Per criterion that is not `check-only`:
 
 1. **Covered.** It has at least one row, and every business rule the plan cites is asserted by some row.
-2. **Catches the named wrong builds, and only those.** Its rows together fail: a build that always succeeds; one that always refuses; each row's Rules out; and on a trust boundary (sign-in, sessions, tokens, callbacks from outside services, payments, permissions), a build that drops any property an attacker would exploit: cookie flags, state and nonce checks, single-use secrets, values that must match from one request to the next. A wrong build outside this list is a follow-up, not a FAIL.
+2. **Catches the named wrong builds, and only those.** Its rows together fail: a build that always succeeds; one that always refuses; each row's Rules out; and on a trust boundary (sign-in, sessions, tokens, callbacks from outside services, payments, permissions), a build that drops any property an attacker would exploit: cookie flags, state and nonce checks, single-use secrets, values that must match from one request to the next. A wrong build outside this list is not reported.
 3. **Distinct values.** Two inputs the code receives separately (ids, URLs, tokens) have different values in a row's given, or code that uses one in place of the other passes.
 
 Per row:
@@ -43,7 +43,6 @@ List only what fails. Each finding carries its fix: the Test map row to add, cha
 Findings:
 1. C<k> <test name, or "new">: <what fails> | fix: <the row>
 
-Follow-ups: <wrong builds outside the list, or none>
 Map: PASS | FAIL
 ```
 

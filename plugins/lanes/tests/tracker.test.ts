@@ -333,9 +333,10 @@ describe('lanes', () => {
   const SUMMARIES = [
     ['core:test-writer', 'Files: a.test.ts\n| C | Test | Fails with |\n| :- | :- | :- |\n| 1 | a | x |\n| 2 | b | y |', '2 failing tests'],
     ['core:test-auditor', 'Suite: npm test: 2 failing\nGate: PASS', 'gate PASS'],
-    ['core:map-auditor', 'Findings:\n1. C2 new: always refuses passes | fix: add a good-input row\n\nFollow-ups: none\nMap: FAIL', 'map FAIL'],
+    ['core:map-auditor', 'Findings:\n1. C2 new: always refuses passes | fix: add a good-input row\n\nMap: FAIL', 'map FAIL'],
     ['core:verifier', '| # | Criterion | Verdict | Evidence |\n| :- | :- | :- | :- |\n| 1 | a | PASS | ok |\n| 2 | b | FAIL | no |\n| F | Frozen | PASS | empty |', '2/3 pass'],
-    ['core:reviewer', '**Must fix**\n1. Null user\n2. Leak\n\n**Follow-ups**\n3. Rename', '2 must fix · 1 follow-ups'],
+    ['core:reviewer', '**Must fix**\n1. Null user\n2. Leak\n\n**Fix here**\n3. Stale error\n4. Third copy of a helper\n\n**Follow-ups**\n5. Old timeout', '2 must fix · 2 fix here · 1 follow-ups'],
+    ['core:reviewer', '**Must fix**\n1. Null user\n\n**Follow-ups**\n2. Old timeout', '1 must fix · 0 fix here · 1 follow-ups'],
     ['Explore', '\n## Found it\nmore', 'Found it'],
   ] as const
   for (const [type, answer, line] of SUMMARIES) {

@@ -83,7 +83,7 @@ Ready, as lanes:
   B: #<n> <title> -> #<m> <title>
   C: #<n> + #<m> + #<k>, joined: <criteria count> criteria
 Follow-ups from merged PRs:
-  PR #<n>: 1) <item> 2) <item>   file or drop?
+  PR #<n>: 1) <item>: file 2) <item>: drop   agree?
 Health: <new errors, failed deploys, or ok>
 Recommend: <the next moves, in one or two lines>
 ```
@@ -92,7 +92,7 @@ Recommend: <the next moves, in one or two lines>
 
 The founder answers per item.
 
-- **Follow-ups:** file the kept ones with the `file-issue` skill, in the epic's milestone when they belong to one. Kept follow-ups that touch the same files or behavior are one issue, each an acceptance criterion, up to eight. Comment the decisions on the PR and add the `triaged` label, creating it first with `gh label create triaged --color C5DEF5 --force` if the repo lacks it.
+- **Follow-ups:** the brief recommends file or drop per item, by the build skill's follow-up bar (its step 7), and the founder confirms or overrides. File the kept ones with the `file-issue` skill: in the epic's milestone only when its exit criteria or business rules need them, else in no milestone, so they wait behind the epic instead of holding it open. Kept follow-ups that touch the same files or behavior are one issue, each an acceptance criterion, up to eight. Each issue says what changes for a user or the founder; test or cleanup items with no such change are dropped, never grouped into a chore of their own. Comment the decisions on the PR and add the `triaged` label, creating it first with `gh label create triaged --color C5DEF5 --force` if the repo lacks it.
 - **Assumed rules:** update the epic doc as its Revising section says.
 - **One-way doors and interview answers:** send them to the lane if one of this session runs the task; else record them in the plan on the task's branch, as the `task` skill's Approve and Interview steps say. The task becomes ready.
 - **Ready PRs and the epic close-out:** the founder's yes is the merge approval. Run the `build` skill on the issue with merging pre-authorized for that PR: it brings the branch up to date if needed, waits for CI, merges, deploys and runs post-deploy. A close-out PR is opened and merged on the same yes.

@@ -72,7 +72,9 @@ const MAP_VERDICT = /^Map:\s*(PASS|FAIL)/m
 const TEST_ROW = /^\|\s*\d+\s*\|/gm
 const VERDICT_ROW = /^\|[^|\n]*\|[^|\n]*\|\s*(PASS|FAIL)\b/gm
 const MUST_FIX = /\*\*Must fix\*\*/
+const FIX_HERE = /\*\*Fix here\*\*/
 const FOLLOW_UPS = /\*\*Follow-ups?\*\*/
+const AFTER_MUST_FIX = /\*\*(?:Fix here|Follow-ups?)\*\*/
 const NUMBERED = /^\d+\./gm
 
 // Task plan sections, per the task skill's template.
@@ -195,7 +197,7 @@ export function summarizeReport(type: string, answer: string): string | undefine
       return `${verdicts.filter(verdict => verdict === 'PASS').length}/${verdicts.length} pass`
     }
     case 'core:reviewer':
-      return `${count(between(answer, MUST_FIX, FOLLOW_UPS), NUMBERED)} must fix · ${count(between(answer, FOLLOW_UPS), NUMBERED)} follow-ups`
+      return `${count(between(answer, MUST_FIX, AFTER_MUST_FIX), NUMBERED)} must fix · ${count(between(answer, FIX_HERE, FOLLOW_UPS), NUMBERED)} fix here · ${count(between(answer, FOLLOW_UPS), NUMBERED)} follow-ups`
     default:
       return firstLine(answer)
   }

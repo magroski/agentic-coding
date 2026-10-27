@@ -26,7 +26,7 @@ Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits t
 | `core:test-writer` | plan path, Delivery's test commands, the closest existing test file as the style example |
 | `core:test-auditor` | plan path, the test files, Delivery's test commands |
 | `core:verifier` | diff command, the plan's criteria that are not check-only, verbatim, the freeze commit and its files |
-| `core:reviewer` | diff command, plan path, Delivery's expected load; in a fix round, the previous Must fix list |
+| `core:reviewer` | diff command, plan path, Delivery's expected load; in a fix round, the previous Must fix and Fix here lists |
 
 If an agent type is not found, spawn `general-purpose` with that agent's file as the brief: `agents/<name>.md`, two levels up from this skill's base directory. Pass the `model` and `effort` its frontmatter names: `general-purpose` would inherit this session's instead.
 
@@ -54,8 +54,8 @@ The design also sets limits that end in a report: three test audits per task (co
 | `Status: Approved` with no `## Test map`, no `Map audit:` line or no `Outcome confirmed` line (an older plan) | 1: `core:task` revises, audits or interviews first. |
 | `Status: Approved` | 1 |
 | `Status: In progress` | Resume. Compare the branch's commits with the plan: no freeze commit in Decisions means step 2 or 3; otherwise the first unticked step. A step left half done is finished, not redone. |
-| `Status: Done`, no PR | 7.3 |
-| `Status: Done`, PR open | 7.4 |
+| `Status: Done`, no PR | 7.4 |
+| `Status: Done`, PR open | 7.5 |
 | `Status: Done`, PR merged, no post-deploy comment on it | 8's deploy, if Delivery's deploy is manual and the live signal does not show this merge; then 9 |
 | `Status: Done`, otherwise | Nothing. Say so. |
 
@@ -78,7 +78,7 @@ The Test map was audited when it was planned. This gate checks only that the tes
 
 1. Run each new test yourself. Each fails, and its output matches the reason in the Test map; guard rows pass. The rest of the suite is unchanged.
 2. Spawn `core:test-auditor`.
-3. A FAIL from either: send the findings to the same `core:test-writer` with `SendMessage`, run step 1 again, then send the same `core:test-auditor` its fix round. Both keep what they already read, so neither starts over, and they stay separate agents. One that cannot be continued (a new session) is spawned fresh, given the plan and the findings. Log every audit under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three audits per task in all, counted across way backs: a way back does not restart them. A row that cannot be written as stated, or an interface the plan names wrongly: take the way back. A third FAIL: stop and report. The auditor's follow-ups go under the plan's `## Suggested follow-ups`.
+3. A FAIL from either: send the findings to the same `core:test-writer` with `SendMessage`, run step 1 again, then send the same `core:test-auditor` its fix round. Both keep what they already read, so neither starts over, and they stay separate agents. One that cannot be continued (a new session) is spawned fresh, given the plan and the findings. Log every audit under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three audits per task in all, counted across way backs: a way back does not restart them. A row that cannot be written as stated, or an interface the plan names wrongly: take the way back. A third FAIL: stop and report.
 4. Gate passed: commit the test writer's files alone, as `Add failing tests for #<n>`. That commit is the freeze point, and every file in it is frozen, test support included; the build adds its own helpers in new files. Add to Decisions: `Tests frozen at <sha>: <files>. Gate: <n> red for the stated reasons; auditor PASS, round <k>.`
 
 ## 4. Build
@@ -87,7 +87,7 @@ Take the plan's Steps in order. Steps change code only: opening the PR, merging 
 
 - **Re-check the ladder before coding.** Needed at all? In the codebase? Standard library? Platform feature? Installed dependency? One line? Only then the minimum that works. A higher rung that holds replaces the step's code; if that changes the Approach, take the way back.
 - **Do what the step says.** Unit tests for internals are welcome. Frozen files are not edited, renamed or skipped. A frozen test that is wrong is a way-back trigger.
-- **New work found:** do it here only if a criterion cannot pass without it. Anything else goes under the plan's `## Suggested follow-ups`, one line each with why it matters, and is not built.
+- **New work found:** do it here when a criterion cannot pass without it, or when it is a defect in what this task builds: that is part of the task, not new work. Anything else is not built. It goes under the plan's `## Suggested follow-ups` only if it meets the follow-up bar (step 7), one line with why it matters.
 - **Check after the step.** Run the tests it touches. A break found now has one suspect.
 - Tick the step in the plan, commit, push.
 
@@ -109,19 +109,25 @@ Check a finding's evidence before acting on it. Reviewers err too.
 | :- | :- |
 | Criterion FAIL, evidence holds | Fix it. Never weaken or reinterpret the criterion. |
 | Criterion FAIL, evidence wrong | Mark it Disputed, with both sides. It does not count as failing; it holds the merge for the founder's ruling. Continue. |
-| Must fix, case holds | Fix it. |
-| Must fix, case does not hold | Drop it; record why under Decisions. |
-| Follow-up | Not fixed. Goes under the plan's suggested follow-ups. |
+| Must fix or Fix here, case holds | Fix it. |
+| Must fix or Fix here, case does not hold | Drop it; record why under Decisions. |
+| Follow-up | Not fixed. Goes under the plan's suggested follow-ups, if it meets the follow-up bar (step 7). |
 
-One fix round. Then run the self-check again, a fresh `core:verifier`, and a fresh `core:reviewer` told it is a fix round, given the Must fix list, on `git diff <sha before the fixes> HEAD`. Record each fix under Decisions: what failed, what changed.
+One fix round. Then run the self-check again, a fresh `core:verifier`, and a fresh `core:reviewer` told it is a fix round, given the Must fix and Fix here lists, on `git diff <sha before the fixes> HEAD`. Record each fix under Decisions: what failed, what changed.
 
 Still failing after that round: when the plan is the cause, take the way back; otherwise report and stop.
 
 ## 7. Pull request
 
 1. `git fetch` and merge `origin/<default branch>` in. Never rebase a pushed branch, never force-push. Rerun the suite if anything came in.
-2. Set the plan's `Status: Done` on the branch, so the merge carries it and a revert undoes it. Push.
-3. Open the PR:
+2. Hold the plan's `## Suggested follow-ups` to the follow-up bar. Each one costs the founder a decision, and a kept one a whole task. Keep an item only when all of these hold:
+   - This task did not cause it, or fixing it here would need a new criterion. Everything else it caused is fixed here.
+   - A user or the founder will hit it at Delivery's expected load, or it is a legal or security duty. A test that could be added, code that could be shared, or load past the expected one does not count.
+   - No open issue tracks it and no earlier triage dropped it, unless this diff makes it worse. Search `gh issue list --state open --search '<words>'` and `gh pr list --state merged --label triaged --search '<words> in:comments'`.
+
+   At most three, the worst `If we skip it` first. A note on how another issue should be built is not a follow-up: comment it on that issue and list it under `## Noted on other issues`. Log the count cut under Decisions as `Follow-ups cut: <n>`.
+3. Set the plan's `Status: Done` on the branch, so the merge carries it and a revert undoes it. Push.
+4. Open the PR:
 
 ```markdown
 <What it does, two or three sentences, in the product's language.>
@@ -137,11 +143,14 @@ Closes #<n> · Closes #<m>, for each `Joins #<m>` in the issue · Plan: `<path>`
 
 ## Suggested follow-ups
 1. <item>. If we skip it: <consequence>.
+
+## Noted on other issues
+- #<m>: <what its build must know>
 ```
 
-Leave out sections with nothing in them. A follow-up that changes how a future issue should be built is also commented on that issue.
+Leave out sections with nothing in them.
 
-4. Wait for CI: `gh pr checks <pr> --watch`. Red: two attempts to fix it. A cause outside this diff (the default branch already red, a missing secret), or still red after two: report as blocked.
+5. Wait for CI: `gh pr checks <pr> --watch`. Red: two attempts to fix it. A cause outside this diff (the default branch already red, a missing secret), or still red after two: report as blocked.
 
 ## 8. Merge and deploy
 
@@ -187,7 +196,7 @@ Criteria: <passed>/<total>, <disputed> disputed (<review rounds> review rounds)
 Tests: <n> frozen at <sha>; gate round <k>
 Performance: <metric before -> after, or none>
 Post-deploy: <immediate results, or not run: why>; checks filed: <#n on dates>
-Suggested follow-ups: <numbered, one line each>
+Suggested follow-ups: <at most three, numbered, one line each>; <n> cut
 Plan revisions: <what was learned, what changed, or none>
 Needs you: <question or dispute, with a recommended answer, or nothing>
 ```
