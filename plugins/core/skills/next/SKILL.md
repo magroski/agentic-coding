@@ -104,6 +104,8 @@ On the founder's go, for the lanes they pick. No `## Delivery` section: launch n
 
 ### Launch
 
+Before the first launch, clean up each `.claude/worktrees/agent-*` worktree that `git worktree list --porcelain` does not mark `locked`, as Clean up says: an earlier session left it. A locked one belongs to a live session.
+
 One fresh agent per task, never given a second task. Start each lane's first task, all in one message so they start together: Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`. They run in the background.
 
 ```
@@ -142,6 +144,12 @@ Never rebase or force-push a lane's branch.
 
 A lane that fails, or stops at one of the build skill's limits, is reported, not retried. A way back is reported as it happens (Relay).
 
+### Clean up
+
+A lane's task is done once its post-deploy is reported, or it failed or stopped at one of the build skill's limits. Once its agent has ended, run Delivery's worktree teardown from its worktree, which removes the stack the lane started, then `git worktree remove <path>`. Teardown comes first: a stack outlives its removed worktree. Never `--force`: a refusal means uncommitted work or a live session, so leave it for the Finish report. A lane waiting on the founder keeps its worktree, since its resume continues there.
+
+Delivery names a local stack but no worktree teardown: the section predates it. Remove nothing, and recommend re-running `/core:setup` in the Finish report.
+
 ### Finish
 
-When every lane is merged, stopped or failed, report one screen: per lane, the PRs, their state, the checks filed and the suggested follow-ups, which go to triage. Remove the worktrees of merged tasks with `git worktree remove` once their agents have ended.
+When every lane is merged, stopped or failed, report one screen: per lane, the PRs, their state, the checks filed and the suggested follow-ups, which go to triage; then each worktree left on disk, with why.

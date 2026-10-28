@@ -75,6 +75,7 @@ The `task`, `build` and `next` skills run unattended and read this section inste
 | End-to-end | Playwright or Cypress config; none is a valid answer |
 | Local stack | `compose.yaml`, `docker-compose.yml`, `Makefile`, README |
 | Worktree setup | git-ignored files the stack needs (`.env`), host port knobs in the compose file |
+| Worktree teardown | the local stack's command to stop and remove a worktree's containers, volumes and built images, naming the worktree's own project: the default can resolve to the main checkout's (`COMPOSE_PROJECT_NAME` in the copied `.env`, a `name:` in the compose file) and delete its data |
 | Deploy | deploy jobs in `.github/workflows`, `.vercel`, `vercel.json`, Railway or Fly config, README |
 | Live signal | health endpoints, deploy status commands (`gh run watch`, `vercel inspect`, `railway status`) |
 | Rollback | the platform's previous-deploy command, else a revert PR |
@@ -93,6 +94,7 @@ Write the section to `AGENTS.md` if the repo uses it, else `CLAUDE.md`, created 
 - Lint and analyse: <commands>
 - Local stack: <command to start; command to run things inside it>
 - Worktree setup: <commands a fresh worktree needs, e.g. `cp ../../../.env .env`, `*_PORT=0`>
+- Worktree teardown: <command, run in a worktree, that removes only what its stack created, e.g. `docker compose -p "$(basename "$PWD")" down -v --rmi local --remove-orphans`; none without a local stack>
 - Deploy: <app>: <auto on merge to main | GitHub Action `<name>` | manual: <command>>; live when <signal>
 - Rollback: <app>: <command, or revert PR>
 - Health: <URL or command>
