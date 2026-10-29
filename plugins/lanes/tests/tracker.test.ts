@@ -71,12 +71,23 @@ describe('lanes', () => {
     const building = fold([end('a2', 'Gate: PASS', 6)], afterSecondGate)
     expect(stageOf(lane(building))).toBe('build')
 
-    const firstReview = fold([helper('v1', 'core:verifier', 7), helper('r1', 'core:reviewer', 8)], building)
+    const firstReview = fold([helper('r1', 'core:reviewer', 7)], building)
     expect(lane(firstReview)).toMatchObject({ reviewRounds: 1, note: undefined })
     expect(stageOf(lane(firstReview))).toBe('review')
 
-    const fixRound = fold([helper('v2', 'core:verifier', 9), helper('r2', 'core:reviewer', 10)], firstReview)
+    const fixRound = fold([end('r1', 'Verdict: fix 1 first.', 8), { kind: 'turn', loopId: 'r1', at: 9 }], firstReview)
     expect(lane(fixRound)).toMatchObject({ reviewRounds: 2, note: 'fix round' })
+  })
+
+  test('the freeze commit starts the build on the light track, where no auditor ends the gate', () => {
+    const written = fold([spawnLane, helper('w1', 'core:test-writer', 1), end('w1', 'Files: a.test.ts', 2)])
+
+    const planCommit = fold([bash(LANE, 'git commit -m "Plan #42: baseline"', 3)], written)
+    expect(stageOf(lane(planCommit))).toBe('tests')
+
+    const frozen = fold([bash(LANE, 'git add a.test.ts && git commit -m "Add failing tests for #42"', 4)], written)
+    expect(stageOf(lane(frozen))).toBe('build')
+    expect(lane(frozen).gateRounds).toBe(0)
   })
 
   test('a finished helper continued for a fix round counts a new round; its first turn does not', () => {
@@ -337,6 +348,11 @@ describe('lanes', () => {
     ['core:verifier', '| # | Criterion | Verdict | Evidence |\n| :- | :- | :- | :- |\n| 1 | a | PASS | ok |\n| 2 | b | FAIL | no |\n| F | Frozen | PASS | empty |', '2/3 pass'],
     ['core:reviewer', '**Must fix**\n1. Null user\n2. Leak\n\n**Fix here**\n3. Stale error\n4. Third copy of a helper\n\n**Follow-ups**\n5. Old timeout', '2 must fix · 2 fix here · 1 follow-ups'],
     ['core:reviewer', '**Must fix**\n1. Null user\n\n**Follow-ups**\n2. Old timeout', '1 must fix · 0 fix here · 1 follow-ups'],
+    [
+      'core:reviewer',
+      '| # | Criterion | Verdict | Evidence |\n| :- | :- | :- | :- |\n| 1 | a | PASS | ok |\n| 2 | b | FAIL | no |\n| F | Frozen | PASS | empty |\n\n**Must fix**\n1. Null user',
+      '2/3 pass · 1 must fix · 0 fix here · 0 follow-ups',
+    ],
     ['Explore', '\n## Found it\nmore', 'Found it'],
   ] as const
   for (const [type, answer, line] of SUMMARIES) {

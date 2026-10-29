@@ -1,7 +1,7 @@
 ---
 name: next
 description: Start the day on the current repo - read milestones, issues, PRs, due checks, plans in progress and untriaged follow-ups, run the checks that are due, and brief the founder in one screen on what needs them, what is moving and what is ready, grouped into parallel lanes. On the founder's go, act as team lead - run each task as a fresh background agent in its own worktree with the build skill, relay their questions, merge their PRs one at a time and see each deploy through. Use when the user invokes it, or asks what's next, what to work on, for a status or morning brief, or to run tasks in parallel.
-argument-hint: "[merge and deploy pre-authorized]"
+argument-hint: "[deploy pre-authorized]"
 ---
 
 # Next
@@ -32,7 +32,7 @@ Also read, with `git show origin/<default branch>:<path>`:
 Epics land in order:
 
 - **Planned:** the doc is `Approved` or `In progress`, has a Business rules section, and its tasks name their issues.
-- **Finished:** the doc is `Done`, or it is planned and its milestone holds only work the founder holds: `founder` and `check` issues, tasks blocked by an open `founder` issue directly or through the epic's Order, plans waiting on the founder's answer, and PRs waiting for the merge gate.
+- **Finished:** the doc is `Done`, or it is planned and its milestone holds only work the founder holds: `founder` and `check` issues, tasks blocked by an open `founder` issue directly or through the epic's Order, plans waiting on the founder's answer, and PRs a Disputed criterion holds.
 - **Buildable:** planned, and every epic it depends on is finished. A `Draft` epic is neither buildable nor finished.
 - **Current:** the first epic, in order, that is not finished. When it is not buildable, it goes under Needs you, to plan in full with `/core:epic`.
 
@@ -57,7 +57,7 @@ Close the milestone of any `Done` epic once it has no open issues left.
 
 ## 4. Find ready work
 
-Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, that no lane of this session is building, and that is a bug, sits in no milestone, or is a task of a buildable epic whose dependencies in that epic's Order are closed. Any other task waits for its epic's turn, however ready it looks, except a started one. An issue joined into another (below) is never ready alone, and counts as open for its dependents until that one merges. A planned or interrupted task is ready: a fresh agent picks it up from the plan, through the build skill's Where to start. A green PR waiting only for merge goes under Needs you instead.
+Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, that no lane of this session is building, and that is a bug, sits in no milestone, or is a task of a buildable epic whose dependencies in that epic's Order are closed. Any other task waits for its epic's turn, however ready it looks, except a started one. An issue joined into another (below) is never ready alone, and counts as open for its dependents until that one merges. A planned or interrupted task is ready: a fresh agent picks it up from the plan, through the build skill's Where to start. A green PR waiting only for merge joins the merge queue (Lead) on the go; one with a Disputed criterion goes under Needs you instead.
 
 Group it into lanes, at most three unless the founder says otherwise. Two tasks share a lane, in dependency order, when one depends on the other or when they touch the same files or migrations: judge from their plans' Steps and Test map when plans exist, else from the issues and the epic doc. Bugs first, then the current epic's tasks in its Order, then issues in no milestone, then other buildable epics' tasks.
 
@@ -95,7 +95,7 @@ The founder answers per item.
 - **Follow-ups:** the brief recommends file or drop per item, by the build skill's follow-up bar (its step 7), and the founder confirms or overrides. File the kept ones with the `file-issue` skill: in the epic's milestone only when its exit criteria or business rules need them, else in no milestone, so they wait behind the epic instead of holding it open. Kept follow-ups that touch the same files or behavior are one issue, each an acceptance criterion, up to eight. Each issue says what changes for a user or the founder; test or cleanup items with no such change are dropped, never grouped into a chore of their own. Comment the decisions on the PR and add the `triaged` label, creating it first with `gh label create triaged --color C5DEF5 --force` if the repo lacks it.
 - **Assumed rules:** update the epic doc as its Revising section says.
 - **One-way doors and interview answers:** send them to the lane if one of this session runs the task; else record them in the plan on the task's branch, as the `task` skill's Approve and Interview steps say. The task becomes ready.
-- **Ready PRs and the epic close-out:** the founder's yes is the merge approval. Run the `build` skill on the issue with merging pre-authorized for that PR: it brings the branch up to date if needed, waits for CI, merges, deploys and runs post-deploy. A close-out PR is opened and merged on the same yes.
+- **Disputed criteria and the epic close-out:** the founder's ruling settles a Disputed criterion: send it to the lane if one of this session runs the task, else run the `build` skill on the issue with the ruling. It fixes what the ruling upholds, brings the branch up to date if needed, waits for CI, merges, deploys and runs post-deploy. A close-out PR is opened and merged on the founder's yes.
 - **Ideas** raised in the conversation: hand them to the `epic` skill.
 
 ## 7. Lead
@@ -135,10 +135,10 @@ A lane's way-back line goes in the same batch, with a recommendation: carry on, 
 As lanes report ready, take them in dependency order, else in the order they became ready:
 
 1. **Up to date.** `git fetch origin`, then `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. GitHub's own merge state reports a stale branch only under branch protection, so do not rely on it. Not an ancestor: resume the lane with `The default branch moved: merge it in, rerun the suite, push, wait for CI, report.` and take the next ready one meanwhile.
-2. **Merge** at the gate, unless the founder pre-authorized merging and nothing is Disputed. The repo's usual merge method.
+2. **Merge**, with the repo's usual merge method. A Disputed criterion holds it for the founder's ruling, relayed like a question.
 3. **Deploy** per Delivery: wait for the live signal. A manual deploy is its own gate, unless the founder pre-authorized deploying, and runs from a fresh checkout of the default branch, as the build skill's step 8 says.
 4. **Resume the lane:** `Merged and deployed: run the build skill's post-deploy, then report.` Once its checks pass, launch the lane's next task, if any, as a new agent (Launch).
-5. **Its immediate checks fail:** if merging was pre-authorized, roll back per Delivery's Rollback line and reopen the issue with a comment linking the rollback and the evidence; else put the rollback under Needs you. Hold the merge queue until it is settled.
+5. **Its immediate checks fail:** roll back per Delivery's Rollback line and reopen the issue with a comment linking the rollback and the evidence. Hold the merge queue until it is settled.
 
 Never rebase or force-push a lane's branch.
 

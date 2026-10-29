@@ -36,7 +36,6 @@ export const HELPER_STAGE: Readonly<Record<string, Stage>> = {
   'core:map-auditor': 'plan',
   'core:test-writer': 'tests',
   'core:test-auditor': 'gate',
-  'core:verifier': 'review',
   'core:reviewer': 'review',
 }
 
@@ -63,6 +62,8 @@ const GH_PR_MERGE = /\bgh pr merge\b(?:\s+#?(\d+))?/
 const GH_POST_DEPLOY = /\bgh pr comment\b[\s\S]*Post-deploy:/
 const GH_COMMENT_PR = /\bgh pr comment\s+#?(\d+)\b/
 const PR_URL = /\/pull\/(\d+)/
+// The gate's last step on either track, the light one having no auditor to end it.
+const FREEZE_COMMIT = /\bgit commit\b[\s\S]*Add failing tests for\b/
 // A failed row of `gh pr checks` off a terminal: "Vercel\tfail\t0\t<url>\tDeployment rate limited".
 const CHECK_FAILED = /^([^\t\n]+)\tfail\t/gm
 
@@ -192,12 +193,13 @@ export function summarizeReport(type: string, answer: string): string | undefine
       const verdict = GATE_VERDICT.exec(answer)?.[1]
       return verdict ? `gate ${verdict}` : firstLine(answer)
     }
-    case 'core:verifier': {
-      const verdicts = [...answer.matchAll(VERDICT_ROW)].map(match => match[1])
-      return `${verdicts.filter(verdict => verdict === 'PASS').length}/${verdicts.length} pass`
+    case 'core:verifier':
+      return passCount(answer) ?? firstLine(answer)
+    case 'core:reviewer': {
+      const findings = `${count(between(answer, MUST_FIX, AFTER_MUST_FIX), NUMBERED)} must fix · ${count(between(answer, FIX_HERE, FOLLOW_UPS), NUMBERED)} fix here · ${count(between(answer, FOLLOW_UPS), NUMBERED)} follow-ups`
+      const criteria = passCount(answer)
+      return criteria ? `${criteria} · ${findings}` : findings
     }
-    case 'core:reviewer':
-      return `${count(between(answer, MUST_FIX, AFTER_MUST_FIX), NUMBERED)} must fix · ${count(between(answer, FIX_HERE, FOLLOW_UPS), NUMBERED)} fix here · ${count(between(answer, FOLLOW_UPS), NUMBERED)} follow-ups`
     default:
       return firstLine(answer)
   }
@@ -280,8 +282,6 @@ function spawnHelper(lane: Lane, type: string, stage: Stage, at: number): Lane {
       const gateRounds = lane.gateRounds + 1
       return { ...moved, gateRounds, note: `round ${gateRounds}/${LIMITS.gateRounds}` }
     }
-    case 'core:verifier':
-      return lane.reviewRounds > 0 ? { ...moved, note: 'fix round' } : moved
     case 'core:reviewer': {
       const reviewRounds = lane.reviewRounds + 1
       return { ...moved, reviewRounds, note: reviewRounds > 1 ? 'fix round' : moved.note }
@@ -360,6 +360,7 @@ function onCommand(board: Board, loopId: string, command: string, at: number): B
 
   const lane = laneOf(board, loopId)
   if (!lane) return board
+  if (FREEZE_COMMIT.test(command)) return withLane(board, lane.id, current => advance(current, 'build', at))
   if (GH_PR_CREATE.test(command)) return withLane(board, lane.id, current => advance(current, 'pr', at))
   if (GH_PR_CHECKS.test(command)) return withLane(board, lane.id, current => ({ ...advance(current, 'pr', at), note: 'CI' }))
 
@@ -565,6 +566,14 @@ function between(text: string, from: RegExp, to?: RegExp): string {
   const end = to ? rest.search(to) : -1
 
   return end > 0 ? rest.slice(0, end) : rest
+}
+
+// "2/3 pass" from a criteria table's verdict rows; undefined when there is no table.
+function passCount(answer: string): string | undefined {
+  const verdicts = [...answer.matchAll(VERDICT_ROW)].map(match => match[1])
+  if (verdicts.length === 0) return undefined
+
+  return `${verdicts.filter(verdict => verdict === 'PASS').length}/${verdicts.length} pass`
 }
 
 function count(text: string, pattern: RegExp): number {

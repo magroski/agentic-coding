@@ -97,6 +97,8 @@ Small unknowns are not questions. Decide and record them.
 
 A separate agent writes these tests before any code exists, from this plan alone. So the Approach names every public interface the tests touch: endpoints, classes, functions, commands. Renaming one later is a way back.
 
+**Track.** Full when a criterion sits on a trust boundary, the task deletes or migrates live data or moves money, or the Test map has more than 8 rows; else light. The full track adds a test audit to the build's gate, where the risk or the size makes a weak test likely to let a wrong build ship.
+
 ## 7. Performance
 
 Only when the task can move a metric (queries, hot paths, page weight) or the issue sets a target. Metric, baseline measured now, target, and the method from Delivery, so the build measures before and after the same way.
@@ -119,6 +121,7 @@ Commit the plan, and any epic doc edits, on the branch the `build` skill checked
 
 Status: Draft | Approved | In progress | Done
 Issue: [#<n>](<url>) · Task <k> of [<epic>](<epic doc>)
+Track: full (<trigger>) | light
 
 ## Goal
 <the outcome the founder confirmed: who can do what, and what they see>
@@ -170,7 +173,7 @@ Every step names its files and layer, and no step lets a layer skip its neighbor
 
 Spawn `core:map-auditor` as a fresh agent, never a fork, with the plan path: it judges the table without this conversation's reasoning. No test exists yet, so a gap it finds costs an edit here instead of rewritten tests and another audit at the build's gate. Not found: spawn `general-purpose` with `agents/map-auditor.md`, two levels up from this skill's base directory, as its brief, with the `model` and `effort` its frontmatter names.
 
-One audit, no second round: each finding comes with the row that fixes it. Apply each one whose case holds; record each that does not, and why, under Decisions. Log `- Map audit: PASS | FAIL, <one line>` under Decisions, check the split limits again (step 4), then commit and push.
+One audit, no second round: each finding comes with the row that fixes it. Apply each one whose case holds; record each that does not, and why, under Decisions. Log `- Map audit: PASS | FAIL, <one line>` under Decisions, check the split limits (step 4) and the track (step 6) again, then commit and push.
 
 ## 11. Approve
 
@@ -188,7 +191,7 @@ Task: #<n> <title> (<Approved | waiting on you>)
 Achieves: <who can do what after it, and what they see, as the founder confirmed>
 Not in it: <what it leaves out, or nothing>
 Criteria: <numbered, one line each>
-Tests: <count> mapped, <count> check-only; map audit <PASS | FAIL, <n> rows changed>
+Tests: <count> mapped, <count> check-only; map audit <PASS | FAIL, <n> rows changed>; track <full: trigger | light>
 Approach: <2-4 bullets>
 One-way doors: <each with the recommended choice, or none>
 Assumed business rules: <each, also added to the epic doc, or none>

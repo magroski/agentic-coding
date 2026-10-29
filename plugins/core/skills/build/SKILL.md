@@ -1,32 +1,31 @@
 ---
 name: build
-description: Build one task end to end without supervision - from its approved plan (planning it first if needed), have a separate agent write failing tests and gate them, implement until they pass without touching them, check the criteria and review the diff with fresh agents, open the PR, merge and deploy at the founder's gates, run post-deploy checks and schedule delayed ones. Use when the user invokes it, asks to build, implement, ship or work on an issue or a plan under docs/plans/, or when a lane is told to build an issue.
-argument-hint: "<issue number or plan path> [merge and deploy pre-authorized]"
+description: Build one task end to end without supervision - from its approved plan (planning it first if needed), have a separate agent write failing tests and gate them, implement until they pass without touching them, check the criteria and review the diff with a fresh agent, open the PR, merge, deploy (a manual deploy at the founder's gate), run post-deploy checks and schedule delayed ones. Use when the user invokes it, asks to build, implement, ship or work on an issue or a plan under docs/plans/, or when a lane is told to build an issue.
+argument-hint: "<issue number or plan path> [deploy pre-authorized]"
 ---
 
 # Build
 
 ```
 plan --> tests first --> gate --> build --> self-check --> review --> PR --> merge --> deploy --> post-deploy
-core:task  test-writer   test-auditor                     verifier          (gate)    (gate)     immediate checks
-map-auditor                                               reviewer                               delayed: check issues
+core:task  test-writer   test-auditor                     reviewer                    (gate if   immediate checks
+map-auditor              (full track)                                                 manual)    delayed: check issues
          <------------- new information: way back to the plan -------------
 ```
 
-Past the plan's interview, the founder is not watching. What makes that safe: tests written before the code by an agent that will not write the code, a gate on those tests, code that must pass them unchanged, and checks by agents that did not write either.
+Past the plan's interview, the founder is not watching. What makes that safe: tests written before the code by an agent that will not write the code, a gate on those tests, code that must pass them unchanged, and a review by an agent that wrote neither.
 
 The plan file is the shared state. Every stage reads it and writes to it, which is what lets a later session or another lane pick the work up.
 
 ## Agents
 
-Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits this conversation, and a checker who read the author's reasoning inherits its blind spots. Give each only what its row lists. A gate fix round continues the same writer and auditor instead (step 3).
+Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits this conversation, and a checker who read the author's reasoning inherits its blind spots. Give each only what its row lists. A fix round continues the same agents instead (steps 3 and 6).
 
 | `subagent_type` | Gets |
 | :- | :- |
 | `core:test-writer` | plan path, Delivery's test commands, the closest existing test file as the style example |
-| `core:test-auditor` | plan path, the test files, Delivery's test commands |
-| `core:verifier` | diff command, the plan's criteria that are not check-only, verbatim, the freeze commit and its files |
-| `core:reviewer` | diff command, plan path, Delivery's expected load; in a fix round, the previous Must fix and Fix here lists |
+| `core:test-auditor` | full track only: plan path, the test files, Delivery's test commands |
+| `core:reviewer` | diff command, plan path, the plan's criteria that are not check-only, verbatim, the freeze commit and its files, Delivery's expected load |
 
 If an agent type is not found, spawn `general-purpose` with that agent's file as the brief: `agents/<name>.md`, two levels up from this skill's base directory. Pass the `model` and `effort` its frontmatter names: `general-purpose` would inherit this session's instead.
 
@@ -36,10 +35,11 @@ Stop only for these. Everything else is decided, recorded under the plan's Decis
 
 - The task interview, while planning (the `task` skill's step 3).
 - A one-way door: impossible or costly to undo (see the `task` skill).
-- Merging to the default branch, and a deploy that does not follow merge automatically. Skip both when the prompt pre-authorizes them, except while a criterion is Disputed: that is the founder's ruling either way.
+- A Disputed criterion: it holds the merge for the founder's ruling. Merging is otherwise not a gate.
+- A deploy that does not follow merge automatically, unless the prompt pre-authorizes it.
 - Cannot continue without the founder; anything destructive; anything outside the repo.
 
-The design also sets limits that end in a report: three test audits per task (counted across way backs), one review fix round, two attempts at a red CI or a missed check, two trips back to the plan.
+The design also sets limits that end in a report: three gate rounds per task (counted across way backs), one review fix round, two attempts at a red CI or a missed check, two trips back to the plan.
 
 **As a lane** (the prompt says so), the founder is reached only through the lead: return a question instead of stopping on it, and stop before merging. The task interview is returned the same way, and planning resumes when the answers arrive.
 
@@ -77,9 +77,9 @@ Spawn `core:test-writer`. It writes the Test map's tests and runs them. It does 
 The Test map was audited when it was planned. This gate checks only that the tests are that map: each row written as stated, red for its reason, and sound.
 
 1. Run each new test yourself. Each fails, and its output matches the reason in the Test map; guard rows pass. The rest of the suite is unchanged.
-2. Spawn `core:test-auditor`.
-3. A FAIL from either: send the findings to the same `core:test-writer` with `SendMessage`, run step 1 again, then send the same `core:test-auditor` its fix round. Both keep what they already read, so neither starts over, and they stay separate agents. One that cannot be continued (a new session) is spawned fresh, given the plan and the findings. Log every audit under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three audits per task in all, counted across way backs: a way back does not restart them. A row that cannot be written as stated, or an interface the plan names wrongly: take the way back. A third FAIL: stop and report.
-4. Gate passed: commit the test writer's files alone, as `Add failing tests for #<n>`. That commit is the freeze point, and every file in it is frozen, test support included; the build adds its own helpers in new files. Add to Decisions: `Tests frozen at <sha>: <files>. Gate: <n> red for the stated reasons; auditor PASS, round <k>.`
+2. On the plan's full track (`Track:`; a plan without one is full), spawn `core:test-auditor`. On the light track, step 1 is the gate, and the reviewer judges the tests' soundness (step 6).
+3. A FAIL from either: send the findings to the same `core:test-writer` with `SendMessage`, run step 1 again, then, on the full track, send the same `core:test-auditor` its fix round. Both keep what they already read, so neither starts over, and they stay separate agents. One that cannot be continued (a new session) is spawned fresh, given the plan and the findings. Log every round under Decisions as `Gate round <k>: PASS | FAIL, <one line>`. Three rounds per task in all, counted across way backs: a way back does not restart them. A row that cannot be written as stated, or an interface the plan names wrongly: take the way back. A third FAIL: stop and report.
+4. Gate passed: commit the test writer's files alone, as `Add failing tests for #<n>`. That commit is the freeze point, and every file in it is frozen, test support included; the build adds its own helpers in new files. Add to Decisions: `Tests frozen at <sha>: <files>. Gate: <n> red for the stated reasons; <auditor PASS | light track>, round <k>.`
 
 ## 4. Build
 
@@ -101,7 +101,7 @@ Fix what fails before the review: a failure you could have caught costs a review
 
 ## 6. Review
 
-Spawn `core:verifier` and `core:reviewer` in parallel, with `git diff origin/<default branch>...HEAD`.
+Spawn `core:reviewer` with `git diff origin/<default branch>...HEAD`. It checks the criteria, then the diff.
 
 Check a finding's evidence before acting on it. Reviewers err too.
 
@@ -113,7 +113,7 @@ Check a finding's evidence before acting on it. Reviewers err too.
 | Must fix or Fix here, case does not hold | Drop it; record why under Decisions. |
 | Follow-up | Not fixed. Goes under the plan's suggested follow-ups, if it meets the follow-up bar (step 7). |
 
-One fix round. Then run the self-check again, a fresh `core:verifier`, and a fresh `core:reviewer` told it is a fix round, given the Must fix and Fix here lists, on `git diff <sha before the fixes> HEAD`. Record each fix under Decisions: what failed, what changed.
+After fixing, run the self-check again. Only when a Must fix held or a criterion failed, send the same `core:reviewer` its fix round with `SendMessage`: the Must fix items and criteria it should find fixed, on `git diff <sha before the fixes> HEAD`. One that cannot be continued (a new session) is spawned fresh, told it is a fix round, with the same. Fix here items alone end at the self-check. One fix round. Record each fix under Decisions: what failed, what changed.
 
 Still failing after that round: when the plan is the cause, take the way back; otherwise report and stop.
 
@@ -156,7 +156,7 @@ Leave out sections with nothing in them.
 
 **A lane stops here** and reports (step 11), to be resumed by the lead once merged.
 
-Otherwise merge at the gate: ask in one line, unless pre-authorized and nothing is Disputed. Just before merging, `git fetch` and check the branch contains the default branch: `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. It does not: back to 7.1. Use the repo's usual merge method, as recent history shows. Deploy per Delivery: automatic on merge, a GitHub Action to watch, or a manual command behind the deploy gate. A manual deploy runs from a fresh detached checkout of the merged default branch (`git fetch`, `git worktree add --detach <tmp> origin/<default branch>`, removed after), never from a working checkout, which may be behind or hold unmerged work.
+Otherwise merge, unless a criterion is Disputed: then ask the founder for a ruling in one line. Just before merging, `git fetch` and check the branch contains the default branch: `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. It does not: back to 7.1. Use the repo's usual merge method, as recent history shows. Deploy per Delivery: automatic on merge, a GitHub Action to watch, or a manual command behind the deploy gate. A manual deploy runs from a fresh detached checkout of the merged default branch (`git fetch`, `git worktree add --detach <tmp> origin/<default branch>`, removed after), never from a working checkout, which may be behind or hold unmerged work.
 
 ## 9. Post-deploy
 
@@ -165,7 +165,7 @@ Wait for Delivery's live signal. None known: post-deploy is not run; say so in t
 Run the plan's immediate checks, which include every check-only criterion. Comment the results on the PR, starting `Post-deploy:`. That comment marks this step done.
 
 - **All pass:** file each delayed check as a `check` issue in the epic's milestone, under the repo's form headings, with absolute run dates counted from today and `Validates: #<n>`.
-- **One fails:** if merging was pre-authorized, roll back per Delivery's Rollback line (a revert PR, merged and deployed the way this one was), reopen #<n> with a comment linking the rollback and the evidence, and report. Otherwise stop with the rollback ready.
+- **One fails:** roll back per Delivery's Rollback line (a revert PR, merged and deployed the way this one was), reopen #<n> with a comment linking the rollback and the evidence, and report.
 
 ## 10. Way back
 
