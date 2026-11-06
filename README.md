@@ -32,6 +32,15 @@ Tasks are split before building at 15 test rows or more than one new outside ser
 Epics are built in roadmap order, each only once it is approved with business rules and issues.
 Design and decisions: [docs/plans/agentic-workflow/README.md](docs/plans/agentic-workflow/README.md).
 
+## Market research
+
+Plugin `market`, before `/core:epic`. Docs go to `docs/market/<idea>/`.
+
+```
+/market:channel-map          where buyers find, compare and get recommended products; which competitors hold each stage
+/market:pick-first-channels  two first channels with trade-offs, first actions, measures and stop rules
+```
+
 ## Use
 
 This machine, all projects:
@@ -40,6 +49,7 @@ This machine, all projects:
 claude plugin marketplace add /path/to/agentic-coding
 claude plugin install core@agentic-coding
 claude plugin install lanes@agentic-coding   # optional: band above the prompt and /lanes pane
+claude plugin install market@agentic-coding  # optional: market research for new ideas
 ```
 
 Another machine:

@@ -16,6 +16,11 @@
       "name": "lanes",
       "source": "./plugins/lanes",
       "description": "Live view of core's build lanes: stage, helper agents, current call."
+    },
+    {
+      "name": "market",
+      "source": "./plugins/market",
+      "description": "Market research and go-to-market planning for business ideas."
     }
   ]
 }
