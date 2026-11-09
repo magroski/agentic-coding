@@ -34,7 +34,7 @@ Gather what could prove it wrong, not only what agrees. Sort each finding into s
 
 ## 4. Interview
 
-Ask until nothing that would change the outcome is unknown. One numbered batch per round, most outcome-changing first, each question with a recommended default, so the founder can reply `go` or `2: other answer`. Show the problem draft when the evidence leaves it open.
+Ask until nothing that would change the outcome is unknown, with the `mattpocock-skills:grilling` skill (Skill tool). Its design tree starts at the problem draft and branches into the areas below, and its rounds set the question format. Its closing check for shared understanding is step 5. Show the problem draft when the evidence leaves it open. If that skill is not installed, ask in numbered rounds, each question with a recommended default, and hold any question whose answer depends on one still open for a later round.
 
 Cover:
 
@@ -48,7 +48,7 @@ Cover:
 
 A technical question goes to the task that needs it. Only when its answer changes cost or feasibility enough to change a product decision does it become a `research` issue, and the tasks it decides get `Blocked by #<n>`.
 
-Small unknowns are not questions. Decide and record them.
+Small unknowns are not questions, even where the grilling skill would ask them. Decide them and record each as `Assumed:` under Decisions.
 
 ## 5. Confirm the key decisions
 

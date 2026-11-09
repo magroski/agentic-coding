@@ -48,6 +48,7 @@ This machine, all projects:
 ```bash
 claude plugin marketplace add /path/to/agentic-coding
 claude plugin install core@agentic-coding
+claude plugin install mattpocock-skills@claude-plugins-official  # /core:epic's interview uses its grilling skill
 claude plugin install lanes@agentic-coding   # optional: band above the prompt and /lanes pane
 claude plugin install market@agentic-coding  # optional: market research for new ideas
 ```
