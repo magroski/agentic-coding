@@ -48,6 +48,9 @@ const LANE_THEN = /then builds #(\d+)/
 const REPORT_BUILT = /^Built:.*·\s*(merged and deployed|ready to merge|blocked|failed)\b/m
 const REPORT_NEEDS = /^Needs you:\s*(.+)$/m
 const NOTHING = /^nothing\b/i
+// The task skill's summary: "One-way doors: <each, recommend X>", or "none".
+const REPORT_ONE_WAY = /^One-way doors:[ \t]*(.+)$/m
+const NONE = /^none\b/i
 const BUILT_STATE: Readonly<Record<string, LaneState>> = {
   'merged and deployed': 'done',
   'ready to merge': 'ready',
@@ -100,6 +103,8 @@ export type Signal =
   | { kind: 'output'; loopId: string; tool: string; input: ToolInput; text: string; isError: boolean; at: number }
   | { kind: 'plan'; loopId: string; path: string; text: string; at: number }
   | { kind: 'end'; loopId: string; answer: string; at: number }
+  // The founder typed in the main conversation.
+  | { kind: 'founder'; at: number }
 
 export function apply(board: Board, signal: Signal): Board {
   switch (signal.kind) {
@@ -115,6 +120,8 @@ export function apply(board: Board, signal: Signal): Board {
       return onPlan(board, signal)
     case 'end':
       return onEnd(board, signal)
+    case 'founder':
+      return onFounder(board)
   }
 }
 
@@ -209,11 +216,22 @@ export type Report = { state: LaneState; question?: string }
 
 // A lane's last words: its build report, else the question it stopped on.
 export function parseReport(answer: string): Report | undefined {
-  const needs = REPORT_NEEDS.exec(answer)?.[1]?.trim()
-  const question = needs && !NOTHING.test(needs) ? needs : undefined
+  const question = questionOf(answer)
   const built = REPORT_BUILT.exec(answer)?.[1]
   if (built) return { state: BUILT_STATE[built] ?? 'failed', question }
   if (question) return { state: 'needs-you', question }
+
+  return undefined
+}
+
+// What a report asks the founder: its `Needs you:` line, else a planner's open
+// one-way doors. A report asking neither asks nothing, however it is worded.
+function questionOf(answer: string): string | undefined {
+  const needs = REPORT_NEEDS.exec(answer)?.[1]?.trim()
+  if (needs && !NOTHING.test(needs)) return needs
+
+  const doors = REPORT_ONE_WAY.exec(answer)?.[1]?.trim()
+  if (doors && !NONE.test(doors)) return doors
 
   return undefined
 }
@@ -455,19 +473,25 @@ function onEnd(board: Board, s: Extract<Signal, { kind: 'end' }>): Board {
   return next
 }
 
-// A lane's turn ended. A lane agent that stops without a report returned a
-// question, as the next skill tells it to; the main loop stopping says nothing.
+// A lane's turn ended. One that asked nothing stopped: a planner's revised
+// plan, a lane's progress note, the main loop pausing.
 function settle(lane: Lane, answer: string, at: number): Lane {
   const report = parseReport(answer)
-  if (!report) {
-    if (lane.loop === MAIN) return lane.state === 'running' ? { ...lane, state: 'idle' } : lane
-    return { ...lane, state: 'needs-you', question: firstLine(answer) }
-  }
+  if (!report) return lane.state === 'running' ? { ...lane, state: 'idle', question: undefined } : lane
 
   const stage = report.state === 'done' ? 'post' : report.state === 'ready' ? 'merge' : stageOf(lane)
   const moved = stage === stageOf(lane) ? lane : moveTo(lane, stage, at)
 
   return { ...moved, state: report.state, question: report.question }
+}
+
+// The founder typing answers every question a lane left, relayed by the lead.
+// The lead may act on the answer without resuming the lane, so the lane stops
+// waiting here rather than on its next turn.
+function onFounder(board: Board): Board {
+  const lanes = board.lanes.map(lane => (lane.state === 'needs-you' ? { ...lane, state: 'idle' as const, question: undefined } : lane))
+
+  return { ...board, lanes }
 }
 
 function newLane(loop: string, at: number, fields: Partial<Lane> = {}): Lane {

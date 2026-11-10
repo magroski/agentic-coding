@@ -26,6 +26,9 @@ const LOOK: Readonly<Record<LaneState, Look>> = {
   done: { glyph: '✓', color: 'success', label: 'merged and deployed' },
 }
 
+// The band shows lanes moving or holding something for the founder; the pane keeps the rest.
+const BAND_HIDDEN: ReadonlySet<LaneState> = new Set(['idle', 'done'])
+
 const STAGE_LABEL: Readonly<Record<Stage, string>> = {
   plan: 'plan',
   tests: 'tests',
@@ -62,7 +65,7 @@ const TODO_LINE = '─'
 
 export function band(kit: Kit, board: Board, now: number, columns: number): RenderElement | undefined {
   const { Box, Text } = kit
-  const lanes = board.lanes.filter(lane => lane.state !== 'done')
+  const lanes = board.lanes.filter(lane => !BAND_HIDDEN.has(lane.state))
   if (lanes.length === 0) return undefined
 
   const isWide = columns >= BAND_WIDE

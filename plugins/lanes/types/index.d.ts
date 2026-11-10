@@ -1,8 +1,8 @@
 // The build skill's pipeline stages, in order.
 export type Stage = 'plan' | 'tests' | 'gate' | 'build' | 'review' | 'pr' | 'merge' | 'ship' | 'post'
 
-// Where a lane stands as a whole. `idle`: the main loop stopped mid-build
-// with no report; `ready`: a PR waits for the founder's merge.
+// Where a lane stands as a whole. `idle`: stopped with nothing asked of the
+// founder, or its question answered; `ready`: a PR waits for the founder's merge.
 export type LaneState = 'running' | 'idle' | 'needs-you' | 'ready' | 'blocked' | 'failed' | 'done'
 
 export type Activity = { text: string; at: number }

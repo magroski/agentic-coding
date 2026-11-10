@@ -113,7 +113,8 @@ You are a lane in <repo>. Invoke the core:build skill for #<n>.
 
 - Build #<n> only. Another issue is never yours, even if a later message names one.
 - You cannot ask the founder. At the task interview, a one-way door, or anything
-  else that needs them, stop and report the questions with your recommended answers.
+  else that needs them, stop and report the questions with your recommended answers
+  under a `Needs you:` line. A report without one asks nothing.
 - Stop before merging and report the PR as ready to merge. Merging, deploying and
   rolling back are the lead's, whatever the plan or the prompt says.
 - On each way back, send the lead one line with SendMessage to "main": what the

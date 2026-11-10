@@ -39,6 +39,7 @@ function engine(on: On, ids: string[]): void {
   on('agent.spawn', () => ({ model: 'claude-opus-5-5', agentId: ids.shift() }))
   on('tool.call', () => ({ result: {}, text: '' }))
   on('turn.complete', (_, e) => ({ text: e.answer }))
+  on('prompt.submit', (_, e) => ({ text: e.text }))
 }
 
 // A Bash call made inside a subagent's loop, as the engine raises it.
@@ -83,6 +84,34 @@ test('a lane that stopped on a question shows the question in the band', async (
   expect((await ui.find({ type: 'Text', text: /^plan/ }))?.text).toBe('plan · needs you')
   expect((await ui.find({ type: 'Text', text: /Redis/ }))?.text).toBe('Redis or Postgres for counters? Recommend Postgres.')
   await ui.unmount()
+})
+
+test("a lane's question leaves the band when the founder types, not on an agent's message or a slash command", async ($, on) => {
+  mock.clock(on, { now: 0 })
+  engine(on, [LANE, 'lane-2'])
+  await $.agent.spawn(spawn({ prompt: LANE_PROMPT, subagentType: 'general-purpose' }))
+  await $.agent.spawn(spawn({ prompt: 'You are a lane in acme. Invoke the core:build skill for #43.', subagentType: 'general-purpose' }))
+  await $.turn.complete({
+    agentId: 'lane-2',
+    answer: 'Needs you: Redis or Postgres for counters? Recommend Postgres.',
+    durationMs: 1,
+    isAborted: false,
+    turnId: 'turn_1',
+    reason: 'answer',
+  })
+  await $.prompt.submit({ text: 'Lane report.', wait: false, origin: { kind: 'peer' } })
+  await $.prompt.submit({ text: '/lanes', wait: false, origin: { kind: 'composer' }, command: { name: 'lanes', args: '' } })
+
+  const asked = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await asked.find({ type: 'Text', text: /Redis/ }))?.text).toBe('Redis or Postgres for counters? Recommend Postgres.')
+  await asked.unmount()
+
+  await $.prompt.submit({ text: 'Postgres.', wait: false, origin: { kind: 'composer' } })
+
+  const answered = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await answered.find({ type: 'Text', text: /^#43/ })).toBeUndefined()
+  expect((await answered.find({ type: 'Text', text: /^#42/ }))?.text).toBe('#42 Invoice CSV export')
+  await answered.unmount()
 })
 
 test("a lane's row opens its detail, and back returns to the list", async ($, on) => {

@@ -175,7 +175,9 @@ describe('lanes', () => {
     ['Built: #42 Invoice export · none · blocked\nNeeds you: add the STRIPE_KEY secret', 'blocked', 'plan', 'add the STRIPE_KEY secret'],
     ['Built: #42 Invoice export · none · failed', 'failed', 'plan', undefined],
     ['Needs you: Redis or Postgres for counters? Recommend Postgres.', 'needs-you', 'plan', 'Redis or Postgres for counters? Recommend Postgres.'],
-    ['One-way door: Redis or Postgres? I recommend Postgres.', 'needs-you', 'plan', 'One-way door: Redis or Postgres? I recommend Postgres.'],
+    ['Task: #42 Invoice export (waiting on you)\nOne-way doors: counters in Redis or Postgres; recommend Postgres\nPlan: docs/plans/x.md', 'needs-you', 'plan', 'counters in Redis or Postgres; recommend Postgres'],
+    ['Task: #42 Invoice export (Approved)\nOne-way doors: none\nPlan: docs/plans/x.md', 'idle', 'plan', undefined],
+    ["All four cross-review changes are applied to #42's plan. The plan is still Approved.", 'idle', 'plan', undefined],
   ] as const
   for (const [answer, state, stage, question] of REPORTS) {
     test(`a lane ending with ${JSON.stringify(answer.split('\n')[0])} is ${state} at ${stage}`, () => {
@@ -190,6 +192,18 @@ describe('lanes', () => {
     const board = fold([spawnLane, end(LANE, 'Needs you: Redis or Postgres?', 1), { kind: 'turn', loopId: LANE, at: 2 }])
 
     expect(lane(board)).toMatchObject({ state: 'running', question: undefined })
+  })
+
+  test('the founder speaking answers a stopped lane, whether or not the lead resumes it; a running lane goes on', () => {
+    const board = fold([
+      spawnLane,
+      { ...spawnLane, id: 'lane-2', prompt: 'Invoke the core:build skill for #43.', at: 1 },
+      end('lane-2', 'Needs you: Redis or Postgres?', 2),
+      { kind: 'founder', at: 3 },
+    ])
+
+    expect(lane(board, 'lane-2')).toMatchObject({ state: 'idle', question: undefined })
+    expect(lane(board).state).toBe('running')
   })
 
   test('the main loop stopping mid-build without a report is idle, not waiting on the founder', () => {

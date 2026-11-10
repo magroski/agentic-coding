@@ -16,6 +16,8 @@ const COMMAND = 'lanes'
 const CLEAR = 'clear'
 // Typed slash commands that make the main conversation a lane.
 const SKILL_COMMANDS = new Set(['core:build', 'core:task'])
+// Prompt origins that are the founder's own words: typed here, or from their phone.
+const FOUNDER_ORIGINS = new Set(['composer', 'bridge'])
 // How often ages redraw while a lane runs.
 const TICK_MS = 5000
 
@@ -103,6 +105,8 @@ export const register: Register = on => {
         at: await $.clock.now(),
       })
     }
+    // The founder writing back answers what lanes asked; opening /lanes does not.
+    if (!e.command && FOUNDER_ORIGINS.has(e.origin.kind)) await record($, { kind: 'founder', at: await $.clock.now() })
 
     return next(e)
   }).catch(($, e, next) => next(e))
