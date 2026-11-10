@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
 
 import type { Board, Lane } from '../types'
-import { EMPTY, MAIN, apply, clearFinished, describeCall, helpersOf, parsePlan, stageOf, summarizeReport } from '../hooks/tracker'
+import { EMPTY, MAIN, apply, clearStopped, describeCall, helpersOf, parsePlan, stageOf, summarizeReport } from '../hooks/tracker'
 import type { Signal } from '../hooks/tracker'
 
 const LANE = 'lane-1'
@@ -292,7 +292,7 @@ describe('lanes', () => {
     ])
   })
 
-  test('clearing drops merged and done lanes and keeps one waiting for its merge', () => {
+  test('clearing keeps only lanes still building: merged, done and stopped ones go', () => {
     const board = fold([
       spawnLane,
       bashOutput(LANE, 'gh pr create --fill', 'https://github.com/acme/app/pull/114', false, 1),
@@ -301,9 +301,12 @@ describe('lanes', () => {
       end('lane-2', 'Built: #43 Refunds · https://x/pull/115 · ready to merge', 4),
       { ...spawnLane, id: 'lane-3', prompt: 'Invoke the core:build skill for #44.', at: 5 },
       end('lane-3', 'Built: #44 Receipts · https://x/pull/116 · merged and deployed', 6),
+      { ...spawnLane, id: 'lane-4', prompt: 'Invoke the core:build skill for #45.', at: 7 },
+      end('lane-4', 'Needs you: Redis or Postgres for counters? Recommend Postgres.', 8),
+      { ...spawnLane, id: 'lane-5', prompt: 'Invoke the core:build skill for #46.', at: 9 },
     ])
 
-    expect(clearFinished(board).lanes.map(one => one.id)).toEqual(['lane-2'])
+    expect(clearStopped(board).lanes.map(one => one.id)).toEqual(['lane-5'])
   })
 
   test('a plan the lane touches names it and counts its steps', () => {

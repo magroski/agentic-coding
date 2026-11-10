@@ -101,14 +101,14 @@ test("a lane's row opens its detail, and back returns to the list", async ($, on
   }
 })
 
-test('/lanes clear drops finished lanes from the pane and keeps the running one', async ($, on) => {
+test('/lanes clear drops a lane waiting on you from the band and keeps the running one', async ($, on) => {
   mock.clock(on, { now: 0 })
   engine(on, [LANE, 'lane-2'])
   await $.agent.spawn(spawn({ prompt: LANE_PROMPT, subagentType: 'general-purpose' }))
   await $.agent.spawn(spawn({ prompt: 'You are a lane in acme. Invoke the core:build skill for #43.', subagentType: 'general-purpose' }))
   await $.turn.complete({
     agentId: 'lane-2',
-    answer: 'Built: #43 Refunds · https://x/pull/115 · merged and deployed',
+    answer: 'Needs you: Redis or Postgres for counters? Recommend Postgres.',
     durationMs: 1,
     isAborted: false,
     turnId: 'turn_1',
@@ -121,10 +121,11 @@ test('/lanes clear drops finished lanes from the pane and keeps the running one'
     origin: { kind: 'composer' },
     presentation: { isFullscreen: false, columns: 80 },
   })
-  expect(cleared.text).toBe('Finished lanes cleared: 1.')
+  expect(cleared.text).toBe('Lanes cleared: 1.')
 
-  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect((await ui.find({ type: 'Text', text: /running/ }))?.text).toBe('1 running')
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /Redis/ })).toBeUndefined()
+  expect((await ui.find({ type: 'Text', text: /^#42/ }))?.text).toBe('#42 Invoice CSV export')
   await ui.unmount()
 })
 

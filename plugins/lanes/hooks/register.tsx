@@ -5,14 +5,14 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { EMPTY, MAIN, PLAN_FILE, apply, clearFinished } from './tracker'
+import { EMPTY, MAIN, PLAN_FILE, apply, clearStopped } from './tracker'
 import type { Signal, ToolInput } from './tracker'
 import { band, detail, pane } from './views'
 import type { Actions } from './views'
 
 const PANE = 'lanes'
 const COMMAND = 'lanes'
-// `/lanes clear`: drops merged and done lanes from the board.
+// `/lanes clear`: drops every lane not still building from the board.
 const CLEAR = 'clear'
 // Typed slash commands that make the main conversation a lane.
 const SKILL_COMMANDS = new Set(['core:build', 'core:task'])
@@ -46,7 +46,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: COMMAND,
-      description: 'Show build lanes: each stage, its helper agents and what they are doing; `clear` drops merged ones',
+      description: 'Show build lanes: each stage, its helper agents and what they are doing; `clear` drops all but running ones',
     })
     $.clock.every(TICK_MS, async () => {
       const current = await read($, board)
@@ -59,8 +59,8 @@ export const register: Register = on => {
   on('command.run', { command: COMMAND }, async ($, e) => {
     if (e.args.trim() === CLEAR) {
       const before = await read($, board)
-      const after = await update($, board, current => clearFinished(current ?? EMPTY))
-      return { text: `Finished lanes cleared: ${before.lanes.length - after.lanes.length}.` }
+      const after = await update($, board, current => clearStopped(current ?? EMPTY))
+      return { text: `Lanes cleared: ${before.lanes.length - after.lanes.length}.` }
     }
 
     await update($, selected, () => null)

@@ -152,10 +152,10 @@ export function otherAgents(board: Board): Loop[] {
   )
 }
 
-// Drops lanes whose PR is merged or that are done, for a long-lived board;
-// a lane still building or waiting on a merge stays.
-export function clearFinished(board: Board): Board {
-  return { ...board, lanes: board.lanes.filter(lane => lane.state !== 'done' && !MERGED.has(stageOf(lane))) }
+// Keeps only lanes still building: one stopped (needs you, ready, blocked,
+// failed, idle, done) or past its merge goes, and does not come back if resumed.
+export function clearStopped(board: Board): Board {
+  return { ...board, lanes: board.lanes.filter(lane => lane.state === 'running' && !MERGED.has(stageOf(lane))) }
 }
 
 // One line for a tool call: "Read src/auth/session.ts", "npm test -- invoices".
