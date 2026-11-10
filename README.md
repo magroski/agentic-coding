@@ -17,6 +17,7 @@ plugins/
 /core:setup   once per repo: issue types, labels, forms, and the Delivery facts every skill reads
 /core:epic    product planning: outcome, business rules, metrics, scope -> epic doc, milestone, issues
 /core:task    task planning: outcome interview, approach, criteria, audited test map, checks -> task plan
+/core:plan-tasks  every task of an epic: parallel planners, one interview message, cross-review vs each other and the epic
 /core:build   one task: tests first, gated -> code -> reviewer -> PR -> merge -> deploy -> checks
 /core:next    daily brief: due checks, what needs you, ready lanes; then leads lanes in parallel
 /core:file-issue  one issue in the repo's format
