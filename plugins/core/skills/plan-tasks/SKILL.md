@@ -44,9 +44,9 @@ You plan #<n> in <repo>. Invoke the core:task skill for #<n>.
   interview or a one-way door with the questions and your recommended answers.
   Answers arrive by message; continue from where you stopped.
 - The epic's other tasks are planned in parallel. Where #<n> uses what an earlier
-  task in the epic's Order builds, design against that task's issue and the epic
-  doc, and name the interface in your Approach. Plans already written:
-  <branch>:<path> for each, or none.
+  task in the epic's Order builds, design against that task's plan when you have
+  it, else its issue and the epic doc, and name the interface in your Approach.
+  Plans already written: <branch>:<path> for each, or none.
 - End every report with `Plan: <branch>:<path>`.
 ```
 
@@ -56,7 +56,7 @@ A planner that splits its task files new issues in the milestone. Each gets its 
 
 Wait until every planner has returned its interview or a report. Then send the founder one message: each task interview whole, in the epic's Order, under its `#<n> <title>`, `Achieves:` and `Not in it:` lines. A question two tasks ask goes once, under the first, marked `also #<m>`. Recommendations that disagree between tasks sit side by side. The founder answers `go`, or `#<n> <k>: <answer>`.
 
-Send each task's answers to its planner with `SendMessage`. It records them and finishes the plan. One-way doors it reports wait for step 5.
+Send each task's answers to its planner with `SendMessage`. It records them and finishes the plan. When several tasks depend on one task, the epic's foundation, send its answers first and theirs once its planner reports, with its plan's `<branch>:<path>`: they design against its interfaces instead of guessing them from its issue. One-way doors it reports wait for step 5.
 
 ## 4. Cross-review
 

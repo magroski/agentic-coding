@@ -30,6 +30,8 @@ pre-authorized in the prompt. Retries are capped (three gate rounds per task, on
 to the plan), then they report. Tasks on a trust boundary, touching live data or money, or past 8 test rows take the
 full track, which adds a test audit to the gate.
 Tasks are split before building at 15 test rows or more than one new outside service; small ones in a lane are joined.
+An epic's tasks fan out into parallel lanes after one small foundation task, and its hard-to-undo and legal questions
+are asked at epic approval, so task plans follow those answers instead of stopping a lane.
 Epics are built in roadmap order, each only once it is approved with business rules and issues.
 Design and decisions: [docs/plans/agentic-workflow/README.md](docs/plans/agentic-workflow/README.md).
 

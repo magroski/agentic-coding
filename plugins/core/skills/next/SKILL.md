@@ -59,9 +59,9 @@ Close the milestone of any `Done` epic once it has no open issues left.
 
 Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, that no lane of this session is building, and that is a bug, sits in no milestone, or is a task of a buildable epic whose dependencies in that epic's Order are closed. Any other task waits for its epic's turn, however ready it looks, except a started one. An issue joined into another (below) is never ready alone, and counts as open for its dependents until that one merges. A planned or interrupted task is ready: a fresh agent picks it up from the plan, through the build skill's Where to start. A green PR waiting only for merge joins the merge queue (Lead) on the go; one with a Disputed criterion goes under Needs you instead.
 
-Group it into lanes, at most three unless the founder says otherwise. Two tasks share a lane, in dependency order, when one depends on the other or when they touch the same files or migrations: judge from their plans' Steps and Test map when plans exist, else from the issues and the epic doc. Bugs first, then the current epic's tasks in its Order, then issues in no milestone, then other buildable epics' tasks.
+Group it into lanes, at most three running at once unless the founder says otherwise. Two tasks share a lane, in dependency order, when one depends on the other or when they touch the same files or migrations: judge from their plans' Steps and Test map when plans exist, else from the issues and the epic doc. Tasks that depend on the same task, and not on each other or the same files, fan out: the first stays in its lane, and each other one is a lane of its own, shown `(after #<n>)`, that starts once #<n> is closed. Bugs first, then the current epic's tasks in its Order, then issues in no milestone, then other buildable epics' tasks.
 
-Join small tasks. Each task pays a full cycle: interview, plan, tests, gate, review, PR, deploy. Unplanned tasks that would share a lane are one task while together they hold at most eight acceptance criteria and one new outside service, the task skill's limits. Never join a task the epic outlined until an earlier one teaches what it needs. On the founder's go, before launching: keep the first issue, add each other one to its body as a `Joins #<m>` line followed by #<m>'s acceptance criteria, and comment `Joined into #<n>` on #<m>. #<n>'s PR closes them all.
+Join small tasks. Each task pays a full cycle: interview, plan, tests, gate, review, PR, deploy. Unplanned tasks that would share a lane are one task while together they hold at most eight acceptance criteria and one new outside service, the task skill's limits. Never join a task the epic outlined until an earlier one teaches what it needs, nor a task others fan out from with any of them: they all wait on it. On the founder's go, before launching: keep the first issue, add each other one to its body as a `Joins #<m>` line followed by #<m>'s acceptance criteria, and comment `Joined into #<n>` on #<m>. #<n>'s PR closes them all.
 
 ## 5. Brief
 
@@ -82,6 +82,7 @@ Ready, as lanes:
   A: #<n> <title> (resume: step <k>/<total>)
   B: #<n> <title> -> #<m> <title>
   C: #<n> + #<m> + #<k>, joined: <criteria count> criteria
+  D: #<m> <title> (after #<n>)
 Follow-ups from merged PRs:
   PR #<n>: 1) <item>: file 2) <item>: drop   agree?
 Health: <new errors, failed deploys, or ok>
@@ -106,7 +107,7 @@ On the founder's go, for the lanes they pick. No `## Delivery` section: launch n
 
 Before the first launch, clean up each `.claude/worktrees/agent-*` worktree that `git worktree list --porcelain` does not mark `locked`, as Clean up says: an earlier session left it. A locked one belongs to a live session.
 
-One fresh agent per task, never given a second task. Start each lane's first task, all in one message so they start together: Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`. They run in the background.
+One fresh agent per task, never given a second task. Start each lane's first task, except lanes waiting `after` a task, all in one message so they start together: Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`. They run in the background.
 
 ```
 You are a lane in <repo>. Invoke the core:build skill for #<n>.
@@ -138,7 +139,7 @@ As lanes report ready, take them in dependency order, else in the order they bec
 1. **Up to date.** `git fetch origin`, then `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. GitHub's own merge state reports a stale branch only under branch protection, so do not rely on it. Not an ancestor: resume the lane with `The default branch moved: merge it in, rerun the suite, push, wait for CI, report.` and take the next ready one meanwhile.
 2. **Merge**, with the repo's usual merge method. A Disputed criterion holds it for the founder's ruling, relayed like a question.
 3. **Deploy** per Delivery: wait for the live signal. A manual deploy is its own gate, unless the founder pre-authorized deploying, and runs from a fresh checkout of the default branch, as the build skill's step 8 says.
-4. **Resume the lane:** `Merged and deployed: run the build skill's post-deploy, then report.` Once its checks pass, launch the lane's next task, if any, as a new agent (Launch).
+4. **Resume the lane:** `Merged and deployed: run the build skill's post-deploy, then report.` Once its checks pass, launch the lane's next task, if any, and the first task of each lane waiting `after` it, each as a new agent (Launch).
 5. **Its immediate checks fail:** roll back per Delivery's Rollback line and reopen the issue with a comment linking the rollback and the evidence. Hold the merge queue until it is settled.
 
 Never rebase or force-push a lane's branch.

@@ -73,7 +73,7 @@ Too big for one build: split it. It is too big when its Test map comes to more t
 
 Each decision is a door.
 
-- **One-way:** impossible or costly to undo. A data model once live data depends on it, a destructive migration, a public contract others consume, the auth model, a framework, database or payment provider, anything that moves money or carries legal or privacy weight. These are the founder's.
+- **One-way:** impossible or costly to undo. A data model once live data depends on it, a destructive migration, a public contract others consume, the auth model, a framework, database or payment provider, anything that moves money or carries legal or privacy weight. These are the founder's. One the epic doc already settles, in a `One-way D<k>` line or a business rule, is not open: follow it and cite the line.
 - **Two-way:** easy to undo. A library behind an adapter, an additive migration, internal APIs, UI, refactors, a constant. Decide it and record the reason.
 
 A business rule the epic doc does not settle is a product decision, asked in the interview. One found after it is answered: two-way (a value that can change later): assume it, record it here, and append it to the epic doc's Business rules as `BR<n>. <rule> | assumed (#<issue>)`, so the founder sees it where product rules live. An older epic doc with no Business rules section gets one, before Decisions, starting at BR1. One-way: stop.
@@ -95,7 +95,7 @@ Small unknowns are not questions. Decide and record them.
 - External dependencies are mocked; time and randomness are injected. Tests are deterministic and fast.
 - A bug's first test reproduces the report.
 
-A separate agent writes these tests before any code exists, from this plan alone. So the Approach names every public interface the tests touch: endpoints, classes, functions, commands. Renaming one later is a way back.
+A separate agent writes these tests before any code exists, from this plan alone. So the Approach names every public interface the tests touch: endpoints, classes, functions, commands. Renaming one later is a way back. When later tasks in the epic's Order depend on this one, it also names what they will use from it (tables and columns, states, routes, components): their plans design against it.
 
 **Track.** Full when a criterion sits on a trust boundary, the task deletes or migrates live data or moves money, or the Test map has more than 8 rows; else light. The full track adds a test audit to the build's gate, where the risk or the size makes a weak test likely to let a wrong build ship.
 
@@ -161,6 +161,7 @@ The design and why. An ASCII diagram for anything with more than two moving part
 ## Decisions
 - One-way (open): <decision>; recommend <choice>
 - One-way: <decision> | approved by the founder YYYY-MM-DD
+- One-way: <decision> | epic D<k> or BR<n>
 - Two-way: <decision>, because <reason>
 - Assumed: <assumption>
 ```
@@ -177,8 +178,8 @@ One audit, no second round: each finding comes with the row that fixes it. Apply
 
 ## 11. Approve
 
-- **No one-way door:** set `Status: Approved` and add `- Auto-approved: no one-way doors (YYYY-MM-DD)` to Decisions. Do not wait.
-- **One or more:** keep `Status: Draft`, write each under Decisions as `One-way (open): <decision>; recommend <choice>`, commit and push, and stop. The lines are what `next` and `build` show the founder later. Once the founder decides, rewrite each as `One-way:` and approve.
+- **No open one-way door:** set `Status: Approved` and add `- Auto-approved: no open one-way doors (YYYY-MM-DD)` to Decisions. Do not wait.
+- **One or more open:** keep `Status: Draft`, write each under Decisions as `One-way (open): <decision>; recommend <choice>`, commit and push, and stop. The lines are what `next` and `build` show the founder later. Once the founder decides, rewrite each as `One-way:` and approve.
 
 Comment the plan's path on the issue, so issue and plan link both ways.
 
@@ -193,7 +194,7 @@ Not in it: <what it leaves out, or nothing>
 Criteria: <numbered, one line each>
 Tests: <count> mapped, <count> check-only; map audit <PASS | FAIL, <n> rows changed>; track <full: trigger | light>
 Approach: <2-4 bullets>
-One-way doors: <each with the recommended choice, or none>
+One-way doors: <each open one with the recommended choice, or none>
 Assumed business rules: <each, also added to the epic doc, or none>
 Plan: <path>
 ```

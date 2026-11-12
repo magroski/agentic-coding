@@ -1,6 +1,6 @@
 ---
 name: epic
-description: Plan product work before any task is planned - a roadmap of epics or a single epic. Interviews the founder to find the real outcome, settles every business rule, success metric, limitation and scope cut as an explicit decision, writes a product-only epic doc, and on approval creates its GitHub milestone and one issue per task. Use when the user invokes it, or wants to plan, scope or rethink a product idea, feature set, milestone, phase, epic or roadmap, or asks what to build and why. Not for the technical plan of a single task; that is the task skill.
+description: Plan product work before any task is planned - a roadmap of epics or a single epic. Interviews the founder to find the real outcome, settles every business rule, success metric, limitation and scope cut as an explicit decision, writes a product-only epic doc whose tasks fan out in parallel after one small foundation task, asks the hard-to-undo and legal questions at approval, and on approval creates its GitHub milestone and one issue per task. Use when the user invokes it, or wants to plan, scope or rethink a product idea, feature set, milestone, phase, epic or roadmap, or asks what to build and why. Not for the technical plan of a single task; that is the task skill.
 argument-hint: "<idea, epic, or path to an epic doc>"
 ---
 
@@ -84,7 +84,10 @@ Platform, legal, cost, and founder prerequisites (#<n>).
 - <item>: <reason>
 
 ## Order
-<ASCII dependency diagram of the tasks>
+<ASCII dependency diagram of the tasks, e.g.>
+1 ─┬─ 2
+   ├─ 3
+   └─ 4
 
 ## Tasks
 1. **<Name>** (#<n>). What a user can do after it, in a paragraph. Covers BR1, BR3. Depends on —.
@@ -97,10 +100,13 @@ Platform, legal, cost, and founder prerequisites (#<n>).
 
 ## Decisions
 - Q: <question> A: <answer>, because <reason> (founder, YYYY-MM-DD)
+- One-way D1: <question> A: <answer>, because <reason> (founder, YYYY-MM-DD) · tasks <k>
 - Assumed: <assumption>
 ```
 
-- **Tasks** are one PR each and deliver something verifiable alone. A task that only pays off once a later one lands is cut in the wrong place. Cut by size, not by surface: an API, the page that uses it and the setup they need are one task while it holds at most eight acceptance criteria and one new outside service (a sign-in provider, an e-mail sender). Past either, cut it. A piece with fewer than three criteria joins its neighbor: every task pays a full cycle of planning, tests, review, PR and deploy. Setup only the founder can do is a `founder` issue. Detail what can be detailed now; where a later task depends on what an earlier one teaches, outline it and name what must be learned.
+- **Tasks** are one PR each and deliver something verifiable alone. A task that only pays off once a later one lands is cut in the wrong place, except the foundation. Cut by size, not by surface: an API, the page that uses it and the setup they need are one task while it holds at most eight acceptance criteria and one new outside service (a sign-in provider, an e-mail sender). Past either, cut it. A piece with fewer than three criteria joins its neighbor: every task pays a full cycle of planning, tests, review, PR and deploy. Setup only the founder can do is a `founder` issue. Detail what can be detailed now; where a later task depends on what an earlier one teaches, outline it and name what must be learned.
+- **Order** is for parallel lanes: a chain of tasks builds one at a time. Task 1 is the foundation: the smallest piece, checkable alone, that builds what two or more later tasks share (the records, states and permissions the business rules name). E.g. a professional's services and hours on their page, before booking, cancelling and reminders fan out from it. Every other task depends on it alone, so all start the day it ships. Add a dependency only where a task needs what another builds or teaches, never because it comes later in the Deliverable scenario. What one task alone uses is that task's, not the foundation's. Under three criteria, the foundation takes the first slice that uses it. With nothing shared, there is no foundation and every task starts at once.
+- **Hard to undo or legal.** Go through each task for choices that cost a lot to undo once users or data depend on them: who owns which records and who may share them, deleting or rewriting live data, what outsiders rely on (a public API, an import or export format, links), how people sign in, a provider the business signs up with (payments, e-mail, messaging), anything that moves money. And for what the law, a platform's policy or a contract requires: personal data and consent, retention and deletion, terms users accept, invoices and tax, age, accessibility. Each one the interview left open is a step 7 question, asked as the product choice, never a design; stack and design doors stay with the task. Asked now, an answer can still add a task, a rule or a founder prerequisite; asked in a task plan, it stops a lane.
 - **No technical content:** no stack, architecture, file paths or library choices. Business rules say what must hold, not how.
 - **Success metrics** each name the task that unlocks them; that task's plan turns the metric into a dated `check` issue.
 - **Exit criteria** are pass/fail, each with its check, and cover the deliverable and the business rules. A metric that needs weeks to read stays a success metric.
@@ -120,7 +126,12 @@ Business rules: <count>, all confirmed
 Metrics: <one line each>
 Founder prerequisites: <list>
 Risks: <top 1-3>
+Order: 1, then 2 · 3 · 4 in parallel
 Doc: <path>
+
+Hard to undo or legal:
+  D1. <question>? Recommend: <answer> · undoing it: <what it costs> · tasks 2, 4
+  D2. <legal question>? Recommend: <answer> · tasks 3
 
 Will file in milestone "<title>":
   1. feature: <issue title>
@@ -131,7 +142,7 @@ Will file in milestone "<title>":
 Then: the doc's docs-only PR, merged.
 ```
 
-Ask for approval of that list. Apply each change the founder asks for to the doc, not only to the chat, and show the changed items again. Approving files exactly that list.
+Ask for approval of that list and an answer to each D question (leave the section out when there are none): `go` takes every recommendation, `D2: <answer>` changes one. Record each answer under Decisions as a `One-way D<k>` line; one that sets what a task must hold is also a business rule, `decided`. Apply each change the founder asks for, and each task or founder prerequisite a D answer calls for, to the doc, not only to the chat, and show the changed items again. Approving files exactly that list.
 
 ## 8. File
 
@@ -150,7 +161,7 @@ Report one line per issue: `#<n> <title>`.
 
 New information reopens the doc, whatever its Status. Change it in place and add a Decisions line: what was learned, and what changed.
 
-A change to the outcome, a business rule, the scope or a success metric needs the founder's approval again. Anything else does not.
+A change to the outcome, a business rule, the scope, a success metric or a `One-way D<k>` decision needs the founder's approval again. Anything else does not.
 
 Filing after a revision reuses the milestone and the issues that exist: file only new tasks, and edit the issues whose task changed. Confirm those as step 7 does first.
 

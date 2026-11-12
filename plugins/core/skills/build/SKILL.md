@@ -34,7 +34,7 @@ If an agent type is not found, spawn `general-purpose` with that agent's file as
 Stop only for these. Everything else is decided, recorded under the plan's Decisions, and the work moves on.
 
 - The task interview, while planning (the `task` skill's step 3).
-- A one-way door: impossible or costly to undo (see the `task` skill).
+- An open one-way door: impossible or costly to undo, and not settled by the epic (see the `task` skill).
 - A Disputed criterion: it holds the merge for the founder's ruling. Merging is otherwise not a gate.
 - A deploy that does not follow merge automatically, unless the prompt pre-authorizes it.
 - Cannot continue without the founder; anything destructive; anything outside the repo.
