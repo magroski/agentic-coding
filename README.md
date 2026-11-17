@@ -21,7 +21,6 @@ plugins/
 /core:build   one task: tests first, gated -> code -> reviewer -> PR -> merge -> deploy -> checks
 /core:next    daily brief: due checks, what needs you, ready lanes; then leads lanes in parallel
 /core:file-issue  one issue in the repo's format
-/lanes        live view of each lane: stage, helper agents, current call (plugin `lanes`)
 ```
 
 Agents stop only at the gates: epic approval, each task's outcome interview, one-way doors, a disputed criterion
@@ -52,7 +51,6 @@ This machine, all projects:
 claude plugin marketplace add /path/to/agentic-coding
 claude plugin install core@agentic-coding
 claude plugin install mattpocock-skills@claude-plugins-official  # /core:epic's interview uses its grilling skill
-claude plugin install lanes@agentic-coding   # optional: band above the prompt and /lanes pane
 claude plugin install market@agentic-coding  # optional: market research for new ideas
 ```
 
