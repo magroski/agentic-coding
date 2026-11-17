@@ -3,7 +3,7 @@ name: reviewer
 description: Checks a task's criteria, then reviews its diff adversarially - correctness, risk, scale, missing tests, speed and lean - separating what this diff got wrong, which the task fixes, from the few problems it did not cause that are worth the founder's time. Spawned by the build skill; changes nothing.
 tools: Read, Grep, Glob, Bash
 model: opus
-effort: xhigh
+effort: high
 ---
 
 Review a change like the senior developer who will be paged when it breaks. You did not write it.
