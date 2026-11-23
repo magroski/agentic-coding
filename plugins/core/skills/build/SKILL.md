@@ -65,7 +65,7 @@ The design also sets limits that end in a report: three gate rounds per task (co
 - **Delivery.** In a lane, run the Delivery section's worktree setup before anything else, since planning may reproduce a bug or measure a baseline. No Delivery section: outside a lane, use the facts the plan's Context records; in a lane, stop as blocked and ask for `/core:setup`, since a lane without its own stack fights the main one for ports.
 - **Branch.** Check out the task's branch, `<type>/<n>-<slug>`, from the remote if it exists there; else create it from `origin/<default branch>`. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. An issue reopened after a rollback never reuses its merged branch, which the revert undoes: create `<type>/<n>-<slug>-<k>` from `origin/<default branch>` and copy the plan in from the merged branch (`git checkout origin/<merged branch> -- <plan>`), so its decisions and way-back count survive.
 - **Plan.** None, Draft, without a Test map, a `Map audit:` line or an `Outcome confirmed` line, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
-- Set `Status: In progress`, commit, push.
+- Set `Status: In progress`, commit, push. Label the issue `gh issue edit <n> --add-label in-progress`, creating the label first with `gh label create in-progress --color 0052CC --force` if the repo lacks it, so status boards show the task as started.
 - **Baseline.** Run the full suite. Tests already failing are recorded under Decisions as pre-existing and left out of every later "still green" check. Measure the performance baseline if the plan has one without a value.
 
 ## 2. Tests first
@@ -202,3 +202,5 @@ Needs you: <question or dispute, with a recommended answer, or nothing>
 ```
 
 A lane adds its branch and worktree path.
+
+A `failed` task gives the work back: `gh issue edit <n> --remove-label in-progress`, so it shows as queued again. A `blocked` one keeps the label, since its branch resumes.

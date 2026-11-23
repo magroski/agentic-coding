@@ -32,7 +32,7 @@ Work with no product face, e.g. a dependency update, keeps a plain technical tit
 
 ### Body
 
-The repo has issue forms in `.github/ISSUE_TEMPLATE/`: write under the matching form's headings, so issues filed by agents and in the browser read the same. Place the content below where it fits: What and Why under the form's value or question heading, Definition of done under its acceptance or pass heading, How under its notes. No forms: use this pattern.
+The repo has issue forms in `.github/ISSUE_TEMPLATE/`: write under the matching form's headings, so issues filed by agents and in the browser read the same. Place the content below where it fits: What and Why under the form's value or question heading, Definition of done under its acceptance or pass heading, How under its notes, When under its When or Due heading. No forms: use this pattern.
 
 ```markdown
 ## What
@@ -84,7 +84,7 @@ Finance retypes about 300 orders a month by hand: 6 hours of work, and the sourc
 
 ## 3. Label
 
-If the repo's `CLAUDE.md` or `AGENTS.md` has an `## Issues` section, it wins: apply its type label and assignee rules. Without forms, the pattern's sections by type:
+If the repo's `CLAUDE.md` or `AGENTS.md` has an `## Issues` section, it wins: apply its type label, role label and assignee rules. The role is the one that does the work, not the one filing it. Without forms, the pattern's sections by type:
 
 | Type | What | How | Definition of done | When |
 | :- | :- | :- | :- | :- |
@@ -100,7 +100,7 @@ No such section: add a label only when an existing one clearly fits (`gh label l
 File without showing drafts first: an issue is easy to edit or close, and the report links each one. Show drafts for approval only when the user asks to review them.
 
 ```bash
-gh issue create --title "<title>" --label <type> --body-file - <<'EOF'
+gh issue create --title "<title>" --label <type> [--label role:<role>] --body-file - <<'EOF'
 <body>
 EOF
 ```

@@ -23,3 +23,9 @@ body:
     attributes:
       label: Notes
       description: Designs, links, constraints, out of scope.
+  - type: textarea
+    id: when
+    attributes:
+      label: When
+      description: Only for dated work. One line per date.
+      placeholder: By 2026-12-15

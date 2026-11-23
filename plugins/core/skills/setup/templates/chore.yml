@@ -14,3 +14,9 @@ body:
     attributes:
       label: Why
       placeholder: Brand refresh.
+  - type: textarea
+    id: when
+    attributes:
+      label: When
+      description: Only for dated work. One line per date.
+      placeholder: By 2026-12-15
