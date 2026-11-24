@@ -33,6 +33,7 @@ An epic's tasks fan out into parallel lanes after one small foundation task, and
 are asked at epic approval, so task plans follow those answers instead of stopping a lane.
 Epics are built in roadmap order, each only once it is approved with business rules and issues.
 Design and decisions: [docs/plans/agentic-workflow/README.md](docs/plans/agentic-workflow/README.md).
+Before merging a change to core, run its evals: `plugins/core/evals/run.sh` ([how they work](plugins/core/evals/README.md)).
 
 ## Market research
 
