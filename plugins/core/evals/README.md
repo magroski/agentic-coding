@@ -15,7 +15,7 @@ Run before merging a change to `plugins/core`. Results land in `evals/results/` 
 | `next-epic-order` | `next` builds no task of an epic whose dependency is a Draft; triage drops test gaps and cleanup, files what users hit | 2026-10-21, 2026-10-27 |
 | `next-fan-out` | tasks that depend only on the foundation run as separate lanes, never chained or joined | 2026-11-12 |
 | `epic-outline` | an outline epic is never approved or filed, even when the founder asks | 2026-10-21 |
-| `lane-interview` | a lane stops at the task interview with a Draft plan pushed and a `Needs you:` report; no tests, no code | 2026-10-21 |
+| `lane-interview` | a lane stops at the task interview with a Draft plan pushed in a draft PR and a `Needs you:` report; no tests, no code | 2026-10-21 |
 | `map-auditor-bar` | the map auditor removes boilerplate rows and asks for nothing outside the closed list | 2026-10-20, 2026-10-27 |
 
 `core:acceptance` has no case: inside an eval's OS sandbox on macOS, Chromium cannot start (its Mach port check is denied) and no local port can be opened. It was checked by hand on 2026-11-24 against this fixture with a real page, outside the sandbox: it walked the step, read the screenshot showing 8.69, and reported FAIL.
@@ -33,5 +33,7 @@ _lib/ledger-repo/      the base fixture repo every case starts from
 <case>/gh/             fixtures: issues.json, issue-<n>.json, milestones.json, prs-open.json, prs-merged.json
 <case>/graders/        regex, tool_used and llm graders
 ```
+
+Prefer regex and tool_used graders. The llm judge (Haiku, 2 of 3 votes) split on correct briefs in about one run in four, so it is kept only where no pattern can tell right from wrong (epic order, fan-out lanes, asking before filing, the auditor's closed bar).
 
 The stub reaches PATH through the sandbox HOME's shell profiles; project settings `env` does not apply inside an eval run. The scaffold refuses to run unless HOME is a temp directory.

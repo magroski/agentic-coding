@@ -54,8 +54,8 @@ The design also sets limits that end in a report: three gate rounds per task (co
 | `Status: Draft` without them | Preflight: `core:task` finishes the plan. |
 | `Status: Approved` | Preflight |
 | `Status: In progress` | Resume. Compare the branch's commits with the plan: no freeze commit in Decisions means Tests first or Gate; otherwise the first unticked step. A step left half done is finished, not redone. |
-| `Status: Done`, no PR | Pull request: open the PR |
-| `Status: Done`, PR open | Pull request: wait for CI |
+| `Status: Done`, PR still a draft | Pull request: fill in the PR and mark it ready |
+| `Status: Done`, PR ready for review | Pull request: wait for CI |
 | `Status: Done`, PR merged, no post-deploy comment on it | Merge and deploy's deploy, if Delivery's deploy is manual and the live signal does not show this merge; then Post-deploy |
 | `Status: Done`, otherwise | Nothing. Say so. |
 
@@ -65,7 +65,7 @@ The design also sets limits that end in a report: three gate rounds per task (co
 - **Delivery.** In a lane, run the Delivery section's worktree setup before anything else, since planning may reproduce a bug or measure a baseline. No Delivery section: outside a lane, use the facts the plan's Context records; in a lane, stop as blocked and ask for `/core:setup`, since a lane without its own stack fights the main one for ports.
 - **Branch.** Check out the task's branch, `<type>/<n>-<slug>`, from the remote if it exists there; else create it from `origin/<default branch>`. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. An issue reopened after a rollback never reuses its merged branch, which the revert undoes: create `<type>/<n>-<slug>-<k>` from `origin/<default branch>` and copy the plan in from the merged branch (`git checkout origin/<merged branch> -- <plan>`), so its decisions and way-back count survive.
 - **Plan.** None, Draft, or reopened after a rollback: invoke `core:task` and follow it, on this branch. A rollback's revision starts with a `Way back:` line saying what the rollback showed. A one-way door there is a gate.
-- Set `Status: In progress`, commit, push. Label the issue `gh issue edit <n> --add-label in-progress`, creating the label first with `gh label create in-progress --color 0052CC --force` if the repo lacks it, so status boards show the task as started.
+- Set `Status: In progress`, commit, push, and update the draft PR's body to match. Label the issue `gh issue edit <n> --add-label in-progress`, creating the label first with `gh label create in-progress --color 0052CC --force` if the repo lacks it, so status boards show the task as started.
 - **Baseline.** Run the full suite. Tests already failing are recorded under Decisions as pre-existing and left out of every later "still green" check. Measure the performance baseline if the plan has one without a value.
 
 ## 2. Tests first
@@ -149,7 +149,7 @@ Log `Walk-through: PASS | FAIL | not run, <one line>` under Decisions.
 
    At most three, the worst `If we skip it` first. A note on how another issue should be built is not a follow-up: comment it on that issue and list it under `## Noted on other issues`. Log the count cut under Decisions as `Follow-ups cut: <n>`.
 3. Set the plan's `Status: Done` on the branch, so the merge carries it and a revert undoes it. Push.
-4. Open the PR:
+4. Fill in the task's draft PR, opened when the plan was written (`gh pr list --head <branch> --state open`; none: open one now), with `gh pr edit <pr> --body-file -` and the body below, then `gh pr ready <pr>`:
 
 ```markdown
 <What it does, two or three sentences, in the product's language.>

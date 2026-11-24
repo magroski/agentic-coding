@@ -16,7 +16,7 @@ Run `git fetch origin` and read from `origin/<default branch>`.
 
 - **The epic doc:** by its `NN` or path. It must be `Approved` or `In progress`, with Business rules and its tasks' issues filed. Otherwise stop: it needs `/core:epic` first.
 - **Its tasks:** the open `feature`, `chore`, `bug` and `research` issues in its milestone: `gh issue list --milestone "<title>" --state open --json number,title,labels,body`.
-- **Their plans:** a remote branch `<type>/<n>-<slug>` holds task #<n>'s plan. Read it with `git show origin/<branch>:<path>`.
+- **Their plans:** an open draft PR on branch `<type>/<n>-<slug>` holds task #<n>'s plan, its path in the PR's `Plan:` line (`gh pr list --state open --json number,headRefName,isDraft,body`). Read it with `git show origin/<branch>:<path>`.
 
 | Task | Do |
 | :- | :- |

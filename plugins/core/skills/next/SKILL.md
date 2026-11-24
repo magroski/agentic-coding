@@ -16,10 +16,9 @@ Fetch first, and read docs and plans from the remote, not the local checkout: la
 git fetch origin --prune
 gh api 'repos/{owner}/{repo}/milestones?state=open'
 gh issue list --state open --limit 300 --json number,title,labels,milestone,body,assignees
-gh pr list --state open --json number,title,headRefName,body,mergeStateStatus,statusCheckRollup
+gh pr list --state open --json number,title,headRefName,isDraft,body,mergeStateStatus,statusCheckRollup
 gh pr list --state merged --limit 30 --search '"Suggested follow-ups" in:body -label:triaged' --json number,title,body
 gh pr list --state merged --limit 30 --search '"Plan:" in:body' --json number,body,comments
-git branch -r
 git worktree list
 ```
 
@@ -37,7 +36,7 @@ Epics land in order:
 - **Buildable:** planned, and every epic it depends on is finished. A `Draft` epic is neither buildable nor finished.
 - **Current:** the first epic, in order, that is not finished. When it is not buildable, it goes under Needs you, to plan in full with `/core:epic`.
 
-A remote branch named `<type>/<n>-<slug>` with no merged PR holds task #<n>'s plan. Read it with `git show origin/<branch>:<path>`: its Status, its ticked steps, and any `One-way (open)` or `Interview (open)` lines. `In progress`, or `Done` with no merged PR: started. It is in progress only while a lane of this session runs it; otherwise it was interrupted, and is ready to resume. `Draft` with open doors or interview questions: Needs you. `Approved`: planned and waiting to be built.
+An open draft PR on a branch named `<type>/<n>-<slug>` holds task #<n>'s plan, its path in the PR's `Plan:` line. Read the plan with `git show origin/<branch>:<path>`: its Status, its ticked steps, and any `One-way (open)` or `Interview (open)` lines. `In progress`, or `Done` with the PR still a draft: started. It is in progress only while a lane of this session runs it; otherwise it was interrupted, and is ready to resume. `Draft` with open doors or interview questions: Needs you. `Approved`: planned and waiting to be built.
 
 ## 2. Run the checks that are due
 
@@ -58,7 +57,7 @@ Close the milestone of any `Done` epic once it has no open issues left.
 
 ## 4. Find ready work
 
-Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, that no lane of this session is building, and that is a bug, sits in no milestone, or is a task of a buildable epic whose dependencies in that epic's Order are closed. Any other task waits for its epic's turn, however ready it looks, except a started one. An issue joined into another (below) is never ready alone, and counts as open for its dependents until that one merges. A planned or interrupted task is ready: a fresh agent picks it up from the plan, through the build skill's Where to start. A green PR waiting only for merge joins the merge queue (Lead) on the go; one with a Disputed criterion goes under Needs you instead.
+Ready: an open `feature`, `chore`, `bug` or `research` issue with no open `Blocked by #<n>`, that no lane of this session is building, and that is a bug, sits in no milestone, or is a task of a buildable epic whose dependencies in that epic's Order are closed. Any other task waits for its epic's turn, however ready it looks, except a started one. An issue joined into another (below) is never ready alone, and counts as open for its dependents until that one merges. A planned or interrupted task is ready: a fresh agent picks it up from the plan, through the build skill's Where to start. A green PR, marked ready and waiting only for merge, joins the merge queue (Lead) on the go; one with a Disputed criterion goes under Needs you instead.
 
 Group it into lanes, at most three running at once unless the founder says otherwise. Two tasks share a lane, in dependency order, when one depends on the other or when they touch the same files or migrations: judge from their plans' Steps and Test map when plans exist, else from the issues and the epic doc. Tasks that depend on the same task, and not on each other or the same files, fan out: the first stays in its lane, and each other one is a lane of its own, shown `(after #<n>)`, that starts once #<n> is closed. Bugs first, then the current epic's tasks in its Order, then issues in no milestone, then other buildable epics' tasks.
 

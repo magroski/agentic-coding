@@ -121,6 +121,19 @@ Next to the epic doc, prefixed with the epic's number: `docs/plans/<roadmap>/NN-
 
 Commit the plan, and any epic doc edits, on the branch the `build` skill checked out, else on the task's branch `<type>/<n>-<slug>` (the existing one, or new from `origin/<default branch>`), and push it. Type: `feat` for a feature, `fix` for a bug, `spike` for research, else `chore`. A plan that lives only in one checkout is invisible to the lane that builds it and to `next`.
 
+Then open the task's draft PR, unless the branch has one open (`gh pr list --head <branch> --state open`): `gh pr create --draft --title "<issue title>" --body-file -`, with the body below. It puts the plan where GitHub, `next` and status boards see it, from the first push. Every later push that changes the plan's Status or its open lines rewrites the body (`gh pr edit <pr> --body-file -`).
+
+```markdown
+Plan for #<n>, not built yet. Status: <Draft | Approved | In progress>
+
+Closes #<n> · Plan: `<path>`
+
+## Waiting on the founder
+- <each `Interview (open)` and `One-way (open)` line, as in Decisions>
+```
+
+Leave out Waiting on the founder when nothing is open. The build fills in the rest and marks the PR ready.
+
 ```markdown
 # <Title>
 
@@ -191,7 +204,7 @@ One audit, no second round: each finding comes with the row that fixes it. Apply
 - **No open one-way door:** set `Status: Approved` and add `- Auto-approved: no open one-way doors (YYYY-MM-DD)` to Decisions. Do not wait.
 - **One or more open:** keep `Status: Draft`, write each under Decisions as `One-way (open): <decision>; recommend <choice>`, commit and push, and stop. The lines are what `next` and `build` show the founder later. Once the founder decides, rewrite each as `One-way:` and approve.
 
-Comment the plan's path on the issue, so issue and plan link both ways.
+The draft PR's `Closes #<n>` links issue and plan both ways.
 
 ## 12. Summarize
 

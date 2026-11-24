@@ -7,7 +7,7 @@ log="$(git rev-parse --git-dir 2>/dev/null || echo /dev/null)/gh-calls.log"
 echo "$*" >> "$log"
 
 serve() { if [ -f "$fx/$1" ]; then cat "$fx/$1"; else echo '[]'; fi; }
-ack() { echo "https://github.com/acme/app/$1/99"; }
+ack() { echo "https://github.com/acme/ledger/$1/99"; }
 
 case "$1 $2" in
   "auth status") echo "Logged in to github.com account founder"; exit 0 ;;
