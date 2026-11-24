@@ -20,7 +20,7 @@ Run `git fetch origin` and read from `origin/<default branch>`.
 
 | Task | Do |
 | :- | :- |
-| No plan; `Draft`; or `Approved` with no `Map audit:` or `Outcome confirmed` line | Plan it. |
+| No plan, or `Draft` | Plan it. |
 | `Approved` | Keep. The cross-review reads it. |
 | `In progress` or `Done` | Being built or built. The cross-review reads it; nothing here revises it. |
 | `Blocked by` an open task issue: an outline, or a task a `research` issue decides | Skip. It waits for what that issue teaches. |
@@ -28,9 +28,9 @@ Run `git fetch origin` and read from `origin/<default branch>`.
 
 A task blocked only by a `founder` issue is planned: setup the founder owes does not change the plan.
 
-Join small tasks before planning, as `next`'s step 4 says; invoking this skill is the founder's go. Once planned, they can no longer be joined.
+Join small tasks before planning, as `next`'s Find ready work says; invoking this skill is the founder's go. Once planned, they can no longer be joined.
 
-Nothing to plan: go to step 4.
+Nothing to plan: go to Cross-review.
 
 ## 2. Plan, in parallel
 
@@ -56,28 +56,28 @@ A planner that splits its task files new issues in the milestone. Each gets its 
 
 Wait until every planner has returned its interview or a report. Then send the founder one message: each task interview whole, in the epic's Order, under its `#<n> <title>`, `Achieves:` and `Not in it:` lines. A question two tasks ask goes once, under the first, marked `also #<m>`. Recommendations that disagree between tasks sit side by side. The founder answers `go`, or `#<n> <k>: <answer>`.
 
-Send each task's answers to its planner with `SendMessage`. It records them and finishes the plan. When several tasks depend on one task, the epic's foundation, send its answers first and theirs once its planner reports, with its plan's `<branch>:<path>`: they design against its interfaces instead of guessing them from its issue. One-way doors it reports wait for step 5.
+Send each task's answers to its planner with `SendMessage`. It records them and finishes the plan. When several tasks depend on one task, the epic's foundation, send its answers first and theirs once its planner reports, with its plan's `<branch>:<path>`: they design against its interfaces instead of guessing them from its issue. One-way doors it reports wait for Apply.
 
 ## 4. Cross-review
 
-Once every planner has reported, its plan approved or held at a one-way door, or the planner stopped as blocked, spawn `core:cross-reviewer` as a fresh agent, never a fork, with the epic doc's path, each task's issue, `<branch>:<path>` and Status, and the skipped tasks with why. It reads the plans without this conversation's reasoning. Not found: spawn `general-purpose` with `agents/cross-reviewer.md`, two levels up from this skill's base directory, as its brief, with the `model` and `effort` its frontmatter names.
+Once every planner has reported, its plan approved or held at a one-way door, or the planner stopped as blocked, spawn `core:cross-reviewer` as a fresh agent, never a fork, with the epic doc's path, each task's issue, `<branch>:<path>` and Status, and the skipped tasks with why. It reads the plans without this conversation's reasoning. Not found: spawn `general-purpose` with `${CLAUDE_PLUGIN_ROOT}/agents/cross-reviewer.md` as its brief, told the plugin root is `${CLAUDE_PLUGIN_ROOT}`, with the `model` and `effort` its frontmatter names.
 
 One review. Its fixes do not get a second one.
 
 ## 5. Apply
 
-- **Plan fix:** send it to that plan's planner with `SendMessage`: `Cross-review: revise your plan per the task skill's Revising: <findings>. Report as before.` Its Revising rules decide the map audit and whether the founder sees it. A plan with no planner in this session gets a fresh one (step 2), told to revise it with the findings. A plan `In progress` or `Done` is never revised here: its finding becomes a new task.
-- **New task** and **Founder**: wait for the plan fixes to report, then send the founder one numbered message, each item with its recommendation: the one-way doors planners hold, the questions their revisions raised, the Founder findings, and the new tasks as the epic skill's step 7 shows what it will file.
+- **Plan fix:** send it to that plan's planner with `SendMessage`: `Cross-review: revise your plan per the task skill's Revising: <findings>. Report as before.` Its Revising rules decide the map audit and whether the founder sees it. A plan with no planner in this session gets a fresh one (Plan, in parallel), told to revise it with the findings. A plan `In progress` or `Done` is never revised here: its finding becomes a new task.
+- **New task** and **Founder**: wait for the plan fixes to report, then send the founder one numbered message, each item with its recommendation: the one-way doors planners hold, the questions their revisions raised, the Founder findings, and the new tasks as the epic skill's Confirm what will be filed shows what it will file.
 
 The answers:
 
 - A one-way door, or a revision's question: to its planner, which approves the plan.
 - A Founder finding: to the planner of the first plan in the epic's Order that it changes, which records it in the epic doc as the task skill records an interview answer; to each other plan it changes, as a plan fix. One branch adds it to the epic doc, so no two add the same rule.
-- New tasks, on the founder's yes: filed as the epic skill's Revising says, then planned through steps 2 to 4, the cross-review checking only the new plans against the rest. No third round: what remains goes to the report.
+- New tasks, on the founder's yes: filed as the epic skill's Revising says, then planned through Plan, Interview and Cross-review, the cross-review checking only the new plans against the rest. No third round: what remains goes to the report.
 
 ## 6. Clean up
 
-Once step 5 is settled and each planner has ended, remove its worktree as `next`'s Clean up says. Its plan is pushed: one waiting on the founder resumes from the plan's open lines, through `build`, with a fresh agent.
+Once Apply is settled and each planner has ended, remove its worktree as `next`'s Clean up says. Its plan is pushed: one waiting on the founder resumes from the plan's open lines, through `build`, with a fresh agent.
 
 ## 7. Report
 

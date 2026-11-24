@@ -25,7 +25,7 @@ Run `git fetch origin` first and read from `origin/<default branch>`: the local 
 
 ## 2. Read the ground
 
-The code on the path of the change, its callers and tests, infra config, migrations, data within reach (read-only), recent git history, and earlier task plans in the same epic, for their format and decisions. Measure a performance baseline now when step 7 applies; it cannot be measured after the change.
+The code on the path of the change, its callers and tests, infra config, migrations, data within reach (read-only), recent git history, and earlier task plans in the same epic, for their format and decisions. Measure a performance baseline now when Performance applies; it cannot be measured after the change.
 
 A task inherits its epic's problem. A bug's problem is its reproduction.
 
@@ -47,11 +47,11 @@ Ask only what changes what a user gets:
 - **Business rules** the epic doc does not settle.
 - **Done.** What the founder will check first to call it done.
 
-Technical choices are not questions: two-way doors are decided (step 5), one-way doors go to Approve.
+Technical choices are not questions: two-way doors are decided (Classify every decision), one-way doors go to Approve.
 
 Record each answer under the plan's Decisions as `- Q: <question> A: <answer> (founder, YYYY-MM-DD)`, then `- Outcome confirmed by the founder (YYYY-MM-DD)`. The confirmed `Not in it` goes under the plan's Out of scope. A business rule settled here goes into the epic doc as `BR<n>. <rule> | decided: founder YYYY-MM-DD (#<n>)`. An answer that changes the epic's outcome, scope or a success metric goes through the epic doc's Revising.
 
-**Not talking to the founder** (a lane, or any agent another session started): write the plan file with `Status: Draft`, the drafted Goal, and each question under Decisions as `Interview (open): <question>; recommend <answer>`. Commit and push it as step 9 says, so the questions survive this session, then report `Needs you: interview for #<n>` and the message. Whoever started you relays it. When the answers arrive, by message or in the plan, rewrite each open line as a `Q: … A: …` and continue from recording them; do not ask again.
+**Not talking to the founder** (a lane, or any agent another session started): write the plan file with `Status: Draft`, the drafted Goal, and each question under Decisions as `Interview (open): <question>; recommend <answer>`. Commit and push it as Write the plan says, so the questions survive this session, then report `Needs you: interview for #<n>` and the message. Whoever started you relays it. When the answers arrive, by message or in the plan, rewrite each open line as a `Q: … A: …` and continue from recording them; do not ask again.
 
 ## 4. Choose the approach
 
@@ -67,7 +67,7 @@ For each part the goal needs, stop at the first rung that holds:
 
 Rungs 2-5 need a search, not a guess. A new dependency is fine when no higher rung holds and it earns its place; a package for a few lines never does. Never cut: validation, security, accessibility, layer boundaries.
 
-Too big for one build: split it. It is too big when its Test map comes to more than 15 rows (check again after step 6), or it brings in more than one new outside service. Every gate and review round on an oversized task finds another gap, so it never converges. Two deploy targets alone (an API and the page that uses it) are not a reason: they ship together while the rows fit. Split into pieces each verifiable alone, none with fewer than three criteria where the criteria allow: every task pays a full cycle of tests, gate, review, PR and deploy. File the extra issues in the same milestone, move the acceptance criteria they take over out of the original issue, add them to the epic doc's Tasks, and plan the first.
+Too big for one build: split it. It is too big when its Test map comes to more than 15 rows (check again after Goal and test map), or it brings in more than one new outside service. Every gate and review round on an oversized task finds another gap, so it never converges. Two deploy targets alone (an API and the page that uses it) are not a reason: they ship together while the rows fit. Split into pieces each verifiable alone, none with fewer than three criteria where the criteria allow: every task pays a full cycle of tests, gate, review, PR and deploy. File the extra issues in the same milestone, move the acceptance criteria they take over out of the original issue, add them to the epic doc's Tasks, and plan the first.
 
 ## 5. Classify every decision
 
@@ -76,7 +76,7 @@ Each decision is a door.
 - **One-way:** impossible or costly to undo. A data model once live data depends on it, a destructive migration, a public contract others consume, the auth model, a framework, database or payment provider, anything that moves money or carries legal or privacy weight. These are the founder's. One the epic doc already settles, in a `One-way D<k>` line or a business rule, is not open: follow it and cite the line.
 - **Two-way:** easy to undo. A library behind an adapter, an additive migration, internal APIs, UI, refactors, a constant. Decide it and record the reason.
 
-A business rule the epic doc does not settle is a product decision, asked in the interview. One found after it is answered: two-way (a value that can change later): assume it, record it here, and append it to the epic doc's Business rules as `BR<n>. <rule> | assumed (#<issue>)`, so the founder sees it where product rules live. An older epic doc with no Business rules section gets one, before Decisions, starting at BR1. One-way: stop.
+A business rule the epic doc does not settle is a product decision, asked in the interview. One found after it is answered: two-way (a value that can change later): assume it, record it here, and append it to the epic doc's Business rules as `BR<n>. <rule> | assumed (#<issue>)`, so the founder sees it where product rules live. One-way: stop.
 
 Small unknowns are not questions. Decide and record them.
 
@@ -166,15 +166,15 @@ The design and why. An ASCII diagram for anything with more than two moving part
 - Assumed: <assumption>
 ```
 
-Leave out Performance when step 7 does not apply. Steps cover the implementation only: the build writes the tests first and handles the PR and deploy.
+Leave out Performance when its step does not apply. Steps cover the implementation only: the build writes the tests first and handles the PR and deploy.
 
 Every step names its files and layer, and no step lets a layer skip its neighbor. Write tersely: every sentence should change what the builder does.
 
 ## 10. Audit the Test map
 
-Spawn `core:map-auditor` as a fresh agent, never a fork, with the plan path: it judges the table without this conversation's reasoning. No test exists yet, so a gap it finds costs an edit here instead of rewritten tests and another audit at the build's gate. Not found: spawn `general-purpose` with `agents/map-auditor.md`, two levels up from this skill's base directory, as its brief, with the `model` and `effort` its frontmatter names.
+Spawn `core:map-auditor` as a fresh agent, never a fork, with the plan path: it judges the table without this conversation's reasoning. No test exists yet, so a gap it finds costs an edit here instead of rewritten tests and another audit at the build's gate. Not found: spawn `general-purpose` with `${CLAUDE_PLUGIN_ROOT}/agents/map-auditor.md` as its brief, told the plugin root is `${CLAUDE_PLUGIN_ROOT}`, with the `model` and `effort` its frontmatter names.
 
-One audit, no second round: each finding comes with the row that fixes it. Apply each one whose case holds; record each that does not, and why, under Decisions. Log `- Map audit: PASS | FAIL, <one line>` under Decisions, check the split limits (step 4) and the track (step 6) again, then commit and push.
+One audit, no second round: each finding comes with the row that fixes it. Apply each one whose case holds; record each that does not, and why, under Decisions. Log `- Map audit: PASS | FAIL, <one line>` under Decisions, check the split limits (Choose the approach) and the track (Goal and test map) again, then commit and push.
 
 ## 11. Approve
 
@@ -203,6 +203,6 @@ Plan: <path>
 
 New information reopens a plan, whatever its Status. Change it in place and add a Decisions line: what was learned, and what changed. A revision during a build starts that line with `Way back:`.
 
-Rows a revision adds or changes go through one map audit (step 10): give the auditor their test names, and it checks only those. A plan with no `Map audit:` line in Decisions, written before that step existed, gets a full one. A plan with no `Outcome confirmed` line that is not yet `In progress` gets the interview (step 3).
+Rows a revision adds or changes go through one map audit (Audit the Test map): give the auditor their test names, and it checks only those.
 
 The founder must approve again only when the revision adds a one-way door. Dropping or weakening a criterion drawn from the issue's acceptance criteria, an interview answer or a business rule changes the founder's product decision, so it goes through the epic doc's Revising instead of being loosened quietly. Other criteria (repo rules, technical checks) are the agent's call, recorded.

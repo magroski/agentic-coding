@@ -27,7 +27,7 @@ Run only the new tests. The build runs the rest of the suite, lint and analysis 
 
 ## Fix round
 
-When sent a fix round, check that each of your findings is fixed, and run checks 1 to 4 on the tests that changed. Tests you passed before stand.
+When sent a fix round, check that each of your findings is fixed, and run every check above on the tests that changed. Tests you passed before stand.
 
 ## Report
 

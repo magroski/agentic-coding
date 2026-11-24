@@ -28,6 +28,7 @@ Also read, with `git show origin/<default branch>:<path>`:
 - The roadmap and epic docs: each epic's Status, and the epics it depends on (the roadmap's Depends on column, else every earlier epic, in roadmap order, else by `NN` prefix).
 - Business rules marked `assumed (#<n>)` in epic docs.
 - The repo's `## Delivery` section, for health and observability sources.
+- The `<!-- core setup v<k> -->` stamp in the agent instructions, against the `Setup version:` line in `${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md`. Missing or lower: Needs you, to re-run `/core:setup`.
 
 Epics land in order:
 
@@ -48,7 +49,7 @@ Then finish interrupted post-deploys: for each merged PR with a `Plan:` line and
 
 ## 3. Close out epics
 
-Task issues are an epic's `feature`, `chore`, `bug` and `research` issues. When every task issue in an epic's milestone is closed and its doc is not `Done`, spawn a fresh `core:verifier` with the exit criteria that can be checked now, and the default branch and production as the output (if the type is not found: `general-purpose` with `agents/verifier.md`, two levels up from this skill's base directory, as the brief, with the `model` and `effort` its frontmatter names).
+Task issues are an epic's `feature`, `chore`, `bug` and `research` issues. When every task issue in an epic's milestone is closed and its doc is not `Done`, spawn a fresh `core:verifier` with the exit criteria that can be checked now, and the default branch and production as the output (if the type is not found: `general-purpose` with `${CLAUDE_PLUGIN_ROOT}/agents/verifier.md` as the brief, told the plugin root is `${CLAUDE_PLUGIN_ROOT}`, with the `model` and `effort` its frontmatter names).
 
 - All pass: offer the close-out under Needs you, as a docs-only PR setting the epic `Done`.
 - A FAIL, or a criterion only the founder can check: under Needs you, with the evidence.
@@ -76,7 +77,7 @@ Needs you:
   2. #<n>: one-way door: <decision>, recommend <choice>
   3. PR #<n> ready to merge · criterion 3 disputed: <both sides, briefly>
   4. Assumed rule BR<k> in <epic>: <rule>. Confirm?
-  5. No Delivery section: run /core:setup before lanes
+  5. No Delivery section: run /core:setup before lanes · or: setup is v<k>, core is at v<n>: re-run /core:setup
   6. Epic <NN> <title> is next and not planned in full: plan it with /core:epic
 Ready, as lanes:
   A: #<n> <title> (resume: step <k>/<total>)
@@ -93,7 +94,7 @@ Recommend: <the next moves, in one or two lines>
 
 The founder answers per item.
 
-- **Follow-ups:** the brief recommends file or drop per item, by the build skill's follow-up bar (its step 7), and the founder confirms or overrides. File the kept ones with the `file-issue` skill: in the epic's milestone only when its exit criteria or business rules need them, else in no milestone, so they wait behind the epic instead of holding it open. Kept follow-ups that touch the same files or behavior are one issue, each an acceptance criterion, up to eight. Each issue says what changes for a user or the founder; test or cleanup items with no such change are dropped, never grouped into a chore of their own. Comment the decisions on the PR and add the `triaged` label, creating it first with `gh label create triaged --color C5DEF5 --force` if the repo lacks it.
+- **Follow-ups:** the brief recommends file or drop per item, by the build skill's follow-up bar (its Pull request step), and the founder confirms or overrides. File the kept ones with the `file-issue` skill: in the epic's milestone only when its exit criteria or business rules need them, else in no milestone, so they wait behind the epic instead of holding it open. Kept follow-ups that touch the same files or behavior are one issue, each an acceptance criterion, up to eight. Each issue says what changes for a user or the founder; test or cleanup items with no such change are dropped, never grouped into a chore of their own. Comment the decisions on the PR and add the `triaged` label, creating it first with `gh label create triaged --color C5DEF5 --force` if the repo lacks it.
 - **Assumed rules:** update the epic doc as its Revising section says.
 - **One-way doors and interview answers:** send them to the lane if one of this session runs the task; else record them in the plan on the task's branch, as the `task` skill's Approve and Interview steps say. The task becomes ready.
 - **Disputed criteria and the epic close-out:** the founder's ruling settles a Disputed criterion: send it to the lane if one of this session runs the task, else run the `build` skill on the issue with the ruling. It fixes what the ruling upholds, brings the branch up to date if needed, waits for CI, merges, deploys and runs post-deploy. A close-out PR is opened and merged on the founder's yes.
@@ -124,13 +125,13 @@ You are a lane in <repo>. Invoke the core:build skill for #<n>.
 
 Its completion notice carries the worktree path and branch. A report can arrive as a handback or as a message; accept either.
 
-A lane's next task, and any task that becomes ready later, gets its own fresh agent with this prompt (Merge, step 4). Never send a lane agent, running or finished, another issue: the plan is written for an agent with no other context, and a reused one builds from the last task's instead. `SendMessage` to a lane carries only its own task: answers, splits, merge-ins and its post-deploy.
+A lane's next task, and any task that becomes ready later, gets its own fresh agent with this prompt (Merge: Resume the lane). Never send a lane agent, running or finished, another issue: the plan is written for an agent with no other context, and a reused one builds from the last task's instead. `SendMessage` to a lane carries only its own task: answers, splits, merge-ins and its post-deploy.
 
 ### Relay
 
 Batch the lanes' questions into one numbered message to the founder, each with its recommendation. Each lane launched without a confirmed plan returns its task interview first: send the founder one batch once each of those lanes has returned its interview or a report. A task interview goes whole, under its `#<n> <title>`, `Achieves:` and `Not in it:` lines. Send each answer back with `SendMessage` to its lane, which resumes it where it stopped.
 
-A lane's way-back line goes in the same batch, with a recommendation: carry on, or split the task when the trip grew its Test map. A split goes to the lane as a message, and the lane splits per the task skill's step 4.
+A lane's way-back line goes in the same batch, with a recommendation: carry on, or split the task when the trip grew its Test map. A split goes to the lane as a message, and the lane splits per the task skill's Choose the approach.
 
 ### Merge, one at a time
 
@@ -138,7 +139,7 @@ As lanes report ready, take them in dependency order, else in the order they bec
 
 1. **Up to date.** `git fetch origin`, then `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. GitHub's own merge state reports a stale branch only under branch protection, so do not rely on it. Not an ancestor: resume the lane with `The default branch moved: merge it in, rerun the suite, push, wait for CI, report.` and take the next ready one meanwhile.
 2. **Merge**, with the repo's usual merge method. A Disputed criterion holds it for the founder's ruling, relayed like a question.
-3. **Deploy** per Delivery: wait for the live signal. A manual deploy is its own gate, unless the founder pre-authorized deploying, and runs from a fresh checkout of the default branch, as the build skill's step 8 says.
+3. **Deploy** per Delivery: wait for the live signal. A manual deploy is its own gate, unless the founder pre-authorized deploying, and runs from a fresh checkout of the default branch, as the build skill's Merge and deploy says.
 4. **Resume the lane:** `Merged and deployed: run the build skill's post-deploy, then report.` Once its checks pass, launch the lane's next task, if any, and the first task of each lane waiting `after` it, each as a new agent (Launch).
 5. **Its immediate checks fail:** roll back per Delivery's Rollback line and reopen the issue with a comment linking the rollback and the evidence. Hold the merge queue until it is settled.
 
@@ -149,8 +150,6 @@ A lane that fails, or stops at one of the build skill's limits, is reported, not
 ### Clean up
 
 A lane's task is done once its post-deploy is reported, or it failed or stopped at one of the build skill's limits. Once its agent has ended, run Delivery's worktree teardown from its worktree, which removes the stack the lane started, then `git worktree remove <path>`. Teardown comes first: a stack outlives its removed worktree. Never `--force`: a refusal means uncommitted work or a live session, so leave it for the Finish report. A lane waiting on the founder keeps its worktree, since its resume continues there.
-
-Delivery names a local stack but no worktree teardown: the section predates it. Remove nothing, and recommend re-running `/core:setup` in the Finish report.
 
 ### Finish
 

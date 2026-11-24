@@ -34,7 +34,7 @@ Gather what could prove it wrong, not only what agrees. Sort each finding into s
 
 ## 4. Interview
 
-Ask until nothing that would change the outcome is unknown, with the `mattpocock-skills:grilling` skill (Skill tool). Its design tree starts at the problem draft and branches into the areas below, and its rounds set the question format. Its closing check for shared understanding is step 5. Show the problem draft when the evidence leaves it open. If that skill is not installed, ask in numbered rounds, each question with a recommended default, and hold any question whose answer depends on one still open for a later round.
+Ask until nothing that would change the outcome is unknown, with the `mattpocock-skills:grilling` skill (Skill tool). Its design tree starts at the problem draft and branches into the areas below, and its rounds set the question format. Its closing check for shared understanding is Confirm the key decisions. Show the problem draft when the evidence leaves it open. If that skill is not installed, ask in numbered rounds, each question with a recommended default, and hold any question whose answer depends on one still open for a later round.
 
 Cover:
 
@@ -106,7 +106,7 @@ Platform, legal, cost, and founder prerequisites (#<n>).
 
 - **Tasks** are one PR each and deliver something verifiable alone. A task that only pays off once a later one lands is cut in the wrong place, except the foundation. Cut by size, not by surface: an API, the page that uses it and the setup they need are one task while it holds at most eight acceptance criteria and one new outside service (a sign-in provider, an e-mail sender). Past either, cut it. A piece with fewer than three criteria joins its neighbor: every task pays a full cycle of planning, tests, review, PR and deploy. Setup only the founder can do is a `founder` issue. Detail what can be detailed now; where a later task depends on what an earlier one teaches, outline it and name what must be learned.
 - **Order** is for parallel lanes: a chain of tasks builds one at a time. Task 1 is the foundation: the smallest piece, checkable alone, that builds what two or more later tasks share (the records, states and permissions the business rules name). E.g. a professional's services and hours on their page, before booking, cancelling and reminders fan out from it. Every other task depends on it alone, so all start the day it ships. Add a dependency only where a task needs what another builds or teaches, never because it comes later in the Deliverable scenario. What one task alone uses is that task's, not the foundation's. Under three criteria, the foundation takes the first slice that uses it. With nothing shared, there is no foundation and every task starts at once.
-- **Hard to undo or legal.** Go through each task for choices that cost a lot to undo once users or data depend on them: who owns which records and who may share them, deleting or rewriting live data, what outsiders rely on (a public API, an import or export format, links), how people sign in, a provider the business signs up with (payments, e-mail, messaging), anything that moves money. And for what the law, a platform's policy or a contract requires: personal data and consent, retention and deletion, terms users accept, invoices and tax, age, accessibility. Each one the interview left open is a step 7 question, asked as the product choice, never a design; stack and design doors stay with the task. Asked now, an answer can still add a task, a rule or a founder prerequisite; asked in a task plan, it stops a lane.
+- **Hard to undo or legal.** Go through each task for choices that cost a lot to undo once users or data depend on them: who owns which records and who may share them, deleting or rewriting live data, what outsiders rely on (a public API, an import or export format, links), how people sign in, a provider the business signs up with (payments, e-mail, messaging), anything that moves money. And for what the law, a platform's policy or a contract requires: personal data and consent, retention and deletion, terms users accept, invoices and tax, age, accessibility. Each one the interview left open is a question for Confirm what will be filed, asked as the product choice, never a design; stack and design doors stay with the task. Asked now, an answer can still add a task, a rule or a founder prerequisite; asked in a task plan, it stops a lane.
 - **No technical content:** no stack, architecture, file paths or library choices. Business rules say what must hold, not how.
 - **Success metrics** each name the task that unlocks them; that task's plan turns the metric into a dated `check` issue.
 - **Exit criteria** are pass/fail, each with its check, and cover the deliverable and the business rules. A metric that needs weeks to read stays a success metric.
@@ -115,7 +115,7 @@ A roadmap README holds the Problem, Evidence, Goal with criteria, Scope, an Epic
 
 ## 7. Confirm what will be filed
 
-Only a doc whose business rules the founder confirmed (step 5), and whose every task is detailed or outlined with what must be learned, gets here. An outline epic stays `Draft`.
+Only a doc whose business rules the founder confirmed (Confirm the key decisions), and whose every task is detailed or outlined with what must be learned, gets here. An outline epic stays `Draft`.
 
 Show the summary, then everything approval will file, as it will be filed:
 
@@ -150,7 +150,7 @@ On approval. An epic is `Approved` only once its business rules are confirmed an
 
 1. Create the milestone, or reuse the epic's if one exists, with the repo's title convention (e.g. `P1 Free plan, public`) and a description that links the doc's path on the default branch:
    `gh api repos/{owner}/{repo}/milestones -f title="<title>" -f description="<deliverable, one line>. Plan: <url>"`
-2. File one issue per task in the milestone, with the `file-issue` skill, whose drafts this approval already covers: label `feature`, or `chore` when no user notices it, plus the role label of the role that does it, when the repo's `## Issues` section lists roles; the repo form's headings; the acceptance criteria approved in step 7; Notes holding only the task number, its dependencies, and `Plan the task before building. Epic: <path>`. An outlined task also names what must be learned, and is `Blocked by` the task that teaches it. No code paths or technical approach: those are the task plan's.
+2. File one issue per task in the milestone, with the `file-issue` skill, whose drafts this approval already covers: label `feature`, or `chore` when no user notices it, plus the role label of the role that does it, when the repo's `## Issues` section lists roles; the repo form's headings; the acceptance criteria approved in Confirm what will be filed; Notes holding only the task number, its dependencies, and `Plan the task before building. Epic: <path>`. An outlined task also names what must be learned, and is `Blocked by` the task that teaches it. No code paths or technical approach: those are the task plan's.
 3. File a `founder` issue for each founder prerequisite, and add `Blocked by #<n>` to the tasks it blocks.
 4. Write the issue numbers into the doc's Tasks and the milestone link into its header. Set `Status: Approved` and add `- Approved by the founder on YYYY-MM-DD.` to Decisions.
 5. Commit the doc on a `docs/<NN>-<slug>` branch and open a PR. The founder's approval of the doc covers merging this docs-only PR: merge it, so the milestone's link resolves.
@@ -163,6 +163,6 @@ New information reopens the doc, whatever its Status. Change it in place and add
 
 A change to the outcome, a business rule, the scope, a success metric or a `One-way D<k>` decision needs the founder's approval again. Anything else does not.
 
-Filing after a revision reuses the milestone and the issues that exist: file only new tasks, and edit the issues whose task changed. Confirm those as step 7 does first.
+Filing after a revision reuses the milestone and the issues that exist: file only new tasks, and edit the issues whose task changed. Confirm those first, as Confirm what will be filed does.
 
 Business rules that task plans add as `assumed (#<n>)` are the founder's to confirm. Confirmed: change the line to `decided: founder YYYY-MM-DD`. Changed: revise the rule, and file a task or bug for any built work it now contradicts.

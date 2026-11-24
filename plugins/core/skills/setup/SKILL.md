@@ -12,6 +12,8 @@ Every piece of work becomes a GitHub issue with exactly one of six type labels: 
 
 Types are labels, not GitHub's native issue types. Native types exist only in organization repos and are defined for the whole organization. Labels work in every repo, filter the same way, and change nothing outside it.
 
+Setup version: 2. Raise it whenever this skill changes what it writes into a repo (labels, forms, the Issues or Delivery format): `next` compares it with the stamp a repo carries and asks for a re-run.
+
 ## 1. Preflight
 
 ```bash
@@ -65,7 +67,7 @@ Roles: keep the repo's existing `role:*` labels; with none, create `product`, `d
 
 ## 4. Issue forms
 
-Copy the six forms in this skill's `templates/` directory into `.github/ISSUE_TEMPLATE/`. Replace `FOUNDER_LOGIN` in `founder.yml` with the founder's login. Forms cannot set a role label; step 7 and the conventions cover issues filed in the browser.
+Copy the six forms in this skill's `templates/` directory into `.github/ISSUE_TEMPLATE/`. Replace `FOUNDER_LOGIN` in `founder.yml` with the founder's login. Forms cannot set a role label; Untyped issues and the conventions cover issues filed in the browser.
 
 `templates/config.yml` turns off blank issues, so every issue filed in the browser picks a type. Copy it too, unless the repo has one: then set only `blank_issues_enabled: false` in it and keep the rest.
 
@@ -109,10 +111,12 @@ Write the section to `AGENTS.md` if the repo uses it, else `CLAUDE.md`, created 
 
 ## 6. Conventions
 
-Later sessions follow the types only if told. Add the section below to the same file as Delivery. Replace an existing `## Issues` section, carrying over its repo-specific lines that this one does not cover, such as a milestone naming rule. Replace `FOUNDER_LOGIN` and `ROLES`.
+Later sessions follow the types only if told. Add the section below to the same file as Delivery. Replace an existing `## Issues` section, carrying over its repo-specific lines that this one does not cover, such as a milestone naming rule. Replace `FOUNDER_LOGIN`, `ROLES` and `SETUP_VERSION`.
 
 ```markdown
 ## Issues
+
+<!-- core setup vSETUP_VERSION -->
 
 Work is tracked in GitHub issues. Each issue has exactly one type label:
 
@@ -160,7 +164,7 @@ Setup: <owner/repo>
 Labels: <created | updated | renamed old -> new>
 Roles: <role labels>
 Forms: <paths written or deleted>
-Conventions and Delivery: <file>
+Conventions and Delivery: <file>, stamped setup v<version>
 Delivery unknowns: <facts left unknown, or none>
 Typed: <table>, or none untyped
 Roled: <table>, or none without a role
