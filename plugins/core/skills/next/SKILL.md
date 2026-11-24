@@ -43,7 +43,7 @@ A remote branch named `<type>/<n>-<slug>` with no merged PR holds task #<n>'s pl
 
 A `check` issue is due when one of its `Run on` dates is today or past, with no `Run YYYY-MM-DD:` comment for it. Run it read-only, as its How to check says. Comment `Run YYYY-MM-DD: PASS` or `FAIL` with the evidence. A FAIL opens a linked `bug`, unless the issue says where else it goes. Close the issue once its last date is recorded.
 
-A check that needs the founder's hands or write access goes to Needs you.
+A check that needs the founder's hands, an account only they hold, or write access is not run here: it goes on the brief's Checks for you list, one numbered line each with what to do and where, so the founder runs them all in one sitting.
 
 Then finish interrupted post-deploys: for each merged PR with a `Plan:` line and no `Post-deploy:` comment, run the `build` skill on its issue. It resumes at deploy and post-deploy.
 
@@ -72,6 +72,9 @@ One screen. Leave out empty sections.
 Next: <repo> · <date> · <epic> (<closed>/<total> tasks)
 
 Checks run: #<n> PASS · #<n> FAIL -> bug #<m>
+Checks for you (reply `1 pass, 2 fail: <what you saw>`):
+  1. #<n> <what to do, where, and what passes> (from PR #<m>)
+  Release: #<n> holds <k> real-device checks for the next release
 Needs you:
   1. #<n> (founder) blocks #<m>, #<k> · due <date>
   2. #<n>: one-way door: <decision>, recommend <choice>
@@ -95,6 +98,7 @@ Recommend: <the next moves, in one or two lines>
 The founder answers per item.
 
 - **Follow-ups:** the brief recommends file or drop per item, by the build skill's follow-up bar (its Pull request step), and the founder confirms or overrides. File the kept ones with the `file-issue` skill: in the epic's milestone only when its exit criteria or business rules need them, else in no milestone, so they wait behind the epic instead of holding it open. Kept follow-ups that touch the same files or behavior are one issue, each an acceptance criterion, up to eight. Each issue says what changes for a user or the founder; test or cleanup items with no such change are dropped, never grouped into a chore of their own. Comment the decisions on the PR and add the `triaged` label, creating it first with `gh label create triaged --color C5DEF5 --force` if the repo lacks it.
+- **Checks for you:** comment each answer on its check as `Run YYYY-MM-DD: PASS (founder)` or `FAIL (founder): <what they saw>`, close it once its last date is recorded, and open a linked `bug` for each FAIL.
 - **Assumed rules:** update the epic doc as its Revising section says.
 - **One-way doors and interview answers:** send them to the lane if one of this session runs the task; else record them in the plan on the task's branch, as the `task` skill's Approve and Interview steps say. The task becomes ready.
 - **Disputed criteria and the epic close-out:** the founder's ruling settles a Disputed criterion: send it to the lane if one of this session runs the task, else run the `build` skill on the issue with the ruling. It fixes what the ruling upholds, brings the branch up to date if needed, waits for CI, merges, deploys and runs post-deploy. A close-out PR is opened and merged on the founder's yes.

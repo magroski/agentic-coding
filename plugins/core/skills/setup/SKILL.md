@@ -12,7 +12,7 @@ Every piece of work becomes a GitHub issue with exactly one of six type labels: 
 
 Types are labels, not GitHub's native issue types. Native types exist only in organization repos and are defined for the whole organization. Labels work in every repo, filter the same way, and change nothing outside it.
 
-Setup version: 2. Raise it whenever this skill changes what it writes into a repo (labels, forms, the Issues or Delivery format): `next` compares it with the stamp a repo carries and asks for a re-run.
+Setup version: 3. Raise it whenever this skill changes what it writes into a repo (labels, forms, the Issues or Delivery format): `next` compares it with the stamp a repo carries and asks for a re-run.
 
 ## 1. Preflight
 
@@ -78,7 +78,8 @@ The `task`, `build` and `next` skills run unattended and read this section inste
 | Fact | Where to look |
 | :- | :- |
 | Test, lint, analyse | `package.json`, `composer.json`, `Makefile`, `pyproject.toml` scripts; the CI workflow steps |
-| End-to-end | Playwright or Cypress config; none is a valid answer |
+| End-to-end | Playwright or Cypress config for web; XCUITest targets, Flutter `integration_test`, Maestro or Detox flows for mobile; and whether CI runs them |
+| Walk-through | how an agent opens the app as a user: the local stack, seed scripts or factories and a seeded test user for sign-in; the simulator or emulator and the build command on mobile; the driver (Playwright for web; the iOS Simulator tool, XCUITest, Maestro or `adb` on mobile) |
 | Local stack | `compose.yaml`, `docker-compose.yml`, `Makefile`, README |
 | Worktree setup | git-ignored files the stack needs (`.env`), host port knobs in the compose file |
 | Worktree teardown | the local stack's command to stop and remove a worktree's containers, volumes and built images, naming the worktree's own project: the default can resolve to the main checkout's (`COMPOSE_PROJECT_NAME` in the copied `.env`, a `name:` in the compose file) and delete its data |
@@ -89,6 +90,8 @@ The `task`, `build` and `next` skills run unattended and read this section inste
 | Performance | existing scripts or configs (Lighthouse, k6), `EXPLAIN ANALYZE` access |
 | Expected load | README, plans; else ask |
 
+No end-to-end harness: file a `chore` to add one (Playwright for web, the platform's UI test runner on mobile), unless one is open, and list it in the report. Agents then write end-to-end rows instead of leaving them to the founder.
+
 Ask the founder only for what the repo cannot show (expected load, rollback, often the live signal), in one numbered batch, each with a recommended default. A fact the founder cannot give yet is written `unknown`: skills that need it skip that step and report it, rather than guess.
 
 Write the section to `AGENTS.md` if the repo uses it, else `CLAUDE.md`, created if missing. Replace an existing `## Delivery` section. One line per fact; a repo with several apps gets one sub-line per app.
@@ -96,7 +99,8 @@ Write the section to `AGENTS.md` if the repo uses it, else `CLAUDE.md`, created 
 ```markdown
 ## Delivery
 
-- Test: <unit> · <api or feature> · <end-to-end, or none>
+- Test: <unit> · <api or feature> · <end-to-end: command, or none>
+- Walk-through: start <command>; seed <command>; sign in as <seeded test user and how>; open <URL, or simulator or emulator>; driver <Playwright | iOS Simulator tool | XCUITest | Maestro | adb>. Or none, when nothing runs locally
 - Lint and analyse: <commands>
 - Local stack: <command to start; command to run things inside it>
 - Worktree setup: <commands a fresh worktree needs, e.g. `cp ../../../.env .env`, `*_PORT=0`>
@@ -166,6 +170,7 @@ Roles: <role labels>
 Forms: <paths written or deleted>
 Conventions and Delivery: <file>, stamped setup v<version>
 Delivery unknowns: <facts left unknown, or none>
+End-to-end chore: <#n filed, or a harness exists>
 Typed: <table>, or none untyped
 Roled: <table>, or none without a role
 Founder: @<login>

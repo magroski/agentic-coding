@@ -1,19 +1,19 @@
 ---
 name: build
-description: Build one task end to end without supervision - from its approved plan (planning it first if needed), have a separate agent write failing tests and gate them, implement until they pass without touching them, check the criteria and review the diff with a fresh agent, open the PR, merge, deploy (a manual deploy at the founder's gate), run post-deploy checks and schedule delayed ones. Use when the user invokes it, asks to build, implement, ship or work on an issue or a plan under docs/plans/, or when a lane is told to build an issue.
+description: Build one task end to end without supervision - from its approved plan (planning it first if needed), have a separate agent write failing tests and gate them, implement until they pass without touching them, check the criteria and review the diff with a fresh agent, have another click through any screen change and screenshot it, open the PR, merge, deploy (a manual deploy at the founder's gate), run post-deploy checks and schedule delayed ones. Use when the user invokes it, asks to build, implement, ship or work on an issue or a plan under docs/plans/, or when a lane is told to build an issue.
 argument-hint: "<issue number or plan path> [deploy pre-authorized]"
 ---
 
 # Build
 
 ```
-plan --> tests first --> gate --> build --> self-check --> review --> PR --> merge --> deploy --> post-deploy
-core:task  test-writer   test-auditor                     reviewer                    (gate if   immediate checks
-map-auditor              (full track)                                                 manual)    delayed: check issues
+plan --> tests first --> gate --> build --> self-check --> review --> walk-through --> PR --> merge --> deploy --> post-deploy
+core:task  test-writer   test-auditor                     reviewer   acceptance                         (gate if   immediate checks
+map-auditor              (full track)                                (screen tasks)                     manual)    delayed: check issues
          <------------- new information: way back to the plan -------------
 ```
 
-Past the plan's interview, the founder is not watching. What makes that safe: tests written before the code by an agent that will not write the code, a gate on those tests, code that must pass them unchanged, and a review by an agent that wrote neither.
+Past the plan's interview, the founder is not watching. What makes that safe: tests written before the code by an agent that will not write the code, a gate on those tests, code that must pass them unchanged, a review by an agent that wrote neither, and, for anything a user sees on screen, an agent that clicks through it and leaves screenshots for the founder to look at later.
 
 The plan file is the shared state. Every stage reads it and writes to it, which is what lets a later session or another lane pick the work up.
 
@@ -26,6 +26,7 @@ Spawn each with the Agent tool as a fresh agent, never a fork: a fork inherits t
 | `core:test-writer` | plan path, Delivery's test commands, the closest existing test file as the style example |
 | `core:test-auditor` | full track only: plan path, the test files, Delivery's test commands |
 | `core:reviewer` | diff command, plan path, the plan's criteria that are not check-only, verbatim, the freeze commit and its files, Delivery's expected load |
+| `core:acceptance` | plans with a `## Walk-through` only: plan path, issue number, Delivery's Walk-through line, a new evidence folder outside the repo, `${TMPDIR:-/tmp}/walk-<n>/` |
 
 If an agent type is not found, spawn `general-purpose` with that agent's file as the brief: `${CLAUDE_PLUGIN_ROOT}/agents/<name>.md`, telling it the plugin root is `${CLAUDE_PLUGIN_ROOT}`. Pass the `model` and `effort` its frontmatter names: `general-purpose` would inherit this session's instead.
 
@@ -39,7 +40,7 @@ Stop only for these. Everything else is decided, recorded under the plan's Decis
 - A deploy that does not follow merge automatically, unless the prompt pre-authorizes it.
 - Cannot continue without the founder; anything destructive; anything outside the repo.
 
-The design also sets limits that end in a report: three gate rounds per task (counted across way backs), one review fix round, two attempts at a red CI or a missed check, two trips back to the plan.
+The design also sets limits that end in a report: three gate rounds per task (counted across way backs), one review fix round, one walk-through fix round, two attempts at a red CI or a missed check, two trips back to the plan.
 
 **As a lane** (the prompt says so), the founder is reached only through the lead: return a question instead of stopping on it, and stop before merging. The task interview is returned the same way, and planning resumes when the answers arrive.
 
@@ -116,7 +117,29 @@ After fixing, run the self-check again. Only when a Must fix held or a criterion
 
 Still failing after that round: when the plan is the cause, take the way back; otherwise report and stop.
 
-## 7. Pull request
+## 7. Walk-through
+
+Only when the plan has a `## Walk-through`. It runs after the review's fixes, on the final code, with nothing else using the local stack.
+
+Spawn `core:acceptance`. It starts and seeds the app as Delivery's Walk-through line says, does each step as a user would, and judges a screenshot of each.
+
+| Result | Action |
+| :- | :- |
+| PASS | Publish the evidence. |
+| FAIL, the screen is wrong | Fix it, run the self-check, then send the same `core:acceptance` its fix round with `SendMessage`. One round. Still failing: report as blocked, with the screenshots. |
+| FAIL, the agent misread the screen, or a step cannot apply as written | Mark it Disputed, with both sides and the screenshot. It holds the merge for the founder's ruling. |
+| Not run (the app would not start, no driver) | Record why under Decisions and say so in the PR, so the founder knows to look by hand. Continue. |
+| Noticed | A defect in lines this diff adds or changes is fixed here. The rest goes in the PR's Walk-through section for the founder. |
+
+Log `Walk-through: PASS | FAIL | not run, <one line>` under Decisions.
+
+**Publish the evidence** on the `evidence` branch, which holds only screenshots and is never merged:
+
+1. `git fetch origin evidence`; then `git worktree add <tmp> origin/evidence`, or `git worktree add --orphan -b evidence <tmp>` when the branch does not exist yet.
+2. Copy the evidence folder's `*.png` into `<tmp>/<n>/`, commit `Walk-through for #<n>`, `git push origin HEAD:evidence`. Rejected because another lane pushed first: `git pull --no-edit origin evidence`, then push again.
+3. `git worktree remove <tmp>`.
+
+## 8. Pull request
 
 1. `git fetch` and merge `origin/<default branch>` in. Never rebase a pushed branch, never force-push. Rerun the suite if anything came in.
 2. Hold the plan's `## Suggested follow-ups` to the follow-up bar. Each one costs the founder a decision, and a kept one a whole task. Keep an item only when all of these hold:
@@ -137,6 +160,13 @@ Closes #<n> · Closes #<m>, for each `Joins #<m>` in the issue · Plan: `<path>`
 | # | Criterion | Verdict | Evidence |
 | :- | :- | :- | :- |
 
+## Walk-through
+<PASS | not run: why> · <k> steps on <web | iOS simulator | Android emulator>
+| # | Step | Verdict | Screenshot |
+| :- | :- | :- | :- |
+| 1 | <step> | PASS | ![](https://github.com/<owner>/<repo>/blob/evidence/<n>/NN-<slug>.png?raw=true) |
+Noticed: <defects outside the steps, each with its screenshot>
+
 ## Performance
 <metric: before -> after, target>
 
@@ -151,22 +181,22 @@ Leave out sections with nothing in them.
 
 5. Wait for CI: `gh pr checks <pr> --watch`. Red: two attempts to fix it. A cause outside this diff (the default branch already red, a missing secret), or still red after two: report as blocked.
 
-## 8. Merge and deploy
+## 9. Merge and deploy
 
 **A lane stops here** and reports (Report), to be resumed by the lead once merged.
 
 Otherwise merge, unless a criterion is Disputed: then ask the founder for a ruling in one line. Just before merging, `git fetch` and check the branch contains the default branch: `git merge-base --is-ancestor origin/<default branch> origin/<branch>`. It does not: merge the default branch in again, as Pull request starts. Use the repo's usual merge method, as recent history shows. Deploy per Delivery: automatic on merge, a GitHub Action to watch, or a manual command behind the deploy gate. A manual deploy runs from a fresh detached checkout of the merged default branch (`git fetch`, `git worktree add --detach <tmp> origin/<default branch>`, removed after), never from a working checkout, which may be behind or hold unmerged work.
 
-## 9. Post-deploy
+## 10. Post-deploy
 
 Wait for Delivery's live signal. None known: post-deploy is not run; say so in the PR comment and the report, because checks against the old deploy would pass falsely.
 
-Run the plan's immediate checks, which include every check-only criterion. Comment the results on the PR, starting `Post-deploy:`. That comment marks this step done.
+Run the plan's immediate checks marked `build`, which include every check-only criterion only production shows. Comment the results on the PR, starting `Post-deploy:`. That comment marks this step done.
 
-- **All pass:** file each delayed check as a `check` issue in the epic's milestone, under the repo's form headings, with absolute run dates counted from today and `Validates: #<n>`.
+- **All pass:** file each delayed check as a `check` issue in the epic's milestone, under the repo's form headings, with absolute run dates counted from today and `Validates: #<n>`. File the checks marked `founder` the same way as one `check` issue run today, its How to check saying the founder runs it: `next` lists it for them, and it holds nothing. Add each Release line to the open `founder` issue titled `Check on real devices before the next release`, as `- [ ] #<n>: <check>`, filing that issue first if none is open.
 - **One fails:** roll back per Delivery's Rollback line (a revert PR, merged and deployed the way this one was), reopen #<n> with a comment linking the rollback and the evidence, and report.
 
-## 10. Way back
+## 11. Way back
 
 Stop building and revise the plan when:
 
@@ -184,7 +214,7 @@ A revision that takes the task past the task skill's split limits (its Choose th
 
 At most two trips per plan. Count the `Way back:` lines, so the count survives a new session. A third trigger means the problem is not understood: stop and report what each trip taught.
 
-## 11. Report
+## 12. Report
 
 One screen:
 
@@ -194,6 +224,7 @@ Criteria: <passed>/<total>, <disputed> disputed (<review rounds> review rounds)
 | # | Criterion | Verdict | Evidence |
 Tests: <n> frozen at <sha>; gate round <k>
 Performance: <metric before -> after, or none>
+Walk-through: <PASS | FAIL | not run: why | none>, <k> steps, evidence on `evidence/<n>/`
 Post-deploy: <immediate results, or not run: why>; checks filed: <#n on dates>
 Suggested follow-ups: <at most three, numbered, one line each>; <n> cut
 Plan revisions: <what was learned, what changed, or none>

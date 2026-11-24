@@ -18,6 +18,8 @@ Run before merging a change to `plugins/core`. Results land in `evals/results/` 
 | `lane-interview` | a lane stops at the task interview with a Draft plan pushed and a `Needs you:` report; no tests, no code | 2026-10-21 |
 | `map-auditor-bar` | the map auditor removes boilerplate rows and asks for nothing outside the closed list | 2026-10-20, 2026-10-27 |
 
+`core:acceptance` has no case: inside an eval's OS sandbox on macOS, Chromium cannot start (its Mach port check is denied) and no local port can be opened. It was checked by hand on 2026-11-24 against this fixture with a real page, outside the sandbox: it walked the step, read the screenshot showing 8.69, and reported FAIL.
+
 Not covered yet, because each needs several turns or a built task: the lead launching a fresh agent per task, the up-to-date check before a merge, a lane messaging the lead on each way back, the three gate rounds, splitting past 15 Test map rows, and worktree teardown naming its own compose project.
 
 ## How a case is built

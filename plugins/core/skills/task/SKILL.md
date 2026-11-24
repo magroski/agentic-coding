@@ -37,19 +37,23 @@ What the task achieves is the founder's call, settled before any decision is wri
 #<n> <title>
 Achieves: <who can do what after it, and what they see, in the product's language>
 Not in it: <what a user might expect that this task leaves out, or nothing>
+Walk-through: an agent clicks through this and screenshots each step for you
+  1. <what a user does> -> sees <what is on screen>
 1. <question>? Recommend: <answer>
 ```
+
+Leave out the Walk-through lines when no criterion changes what a user sees or does on screen.
 
 Ask only what changes what a user gets:
 
 - **Outcome.** The lines above, for the founder to confirm or correct.
 - **Open behavior.** What a user sees at each edge the acceptance criteria leave open: empty, at a limit, on an error, when two changes collide, without permission; what happens to existing data and users.
 - **Business rules** the epic doc does not settle.
-- **Done.** What the founder will check first to call it done.
+- **Done.** What the founder would check first to call it done. For a task a user sees on screen, that is the Walk-through: draft it as the steps the founder would click through by hand, a few at most, each with what the screen shows.
 
 Technical choices are not questions: two-way doors are decided (Classify every decision), one-way doors go to Approve.
 
-Record each answer under the plan's Decisions as `- Q: <question> A: <answer> (founder, YYYY-MM-DD)`, then `- Outcome confirmed by the founder (YYYY-MM-DD)`. The confirmed `Not in it` goes under the plan's Out of scope. A business rule settled here goes into the epic doc as `BR<n>. <rule> | decided: founder YYYY-MM-DD (#<n>)`. An answer that changes the epic's outcome, scope or a success metric goes through the epic doc's Revising.
+Record each answer under the plan's Decisions as `- Q: <question> A: <answer> (founder, YYYY-MM-DD)`, then `- Outcome confirmed by the founder (YYYY-MM-DD)`. The confirmed `Not in it` goes under the plan's Out of scope, and the confirmed walk under its `## Walk-through`. A business rule settled here goes into the epic doc as `BR<n>. <rule> | decided: founder YYYY-MM-DD (#<n>)`. An answer that changes the epic's outcome, scope or a success metric goes through the epic doc's Revising.
 
 **Not talking to the founder** (a lane, or any agent another session started): write the plan file with `Status: Draft`, the drafted Goal, and each question under Decisions as `Interview (open): <question>; recommend <answer>`. Commit and push it as Write the plan says, so the questions survive this session, then report `Needs you: interview for #<n>` and the message. Whoever started you relays it. When the answers arrive, by message or in the plan, rewrite each open line as a `Q: … A: …` and continue from recording them; do not ask again.
 
@@ -82,7 +86,7 @@ Small unknowns are not questions. Decide and record them.
 
 ## 6. Goal and test map
 
-**Goal.** One sentence, then three to eight numbered criteria, each pass/fail and paired with its check: a command, or the exact thing to inspect. Draw them from the issue's acceptance criteria (a bug's expected behavior, a chore's change), the business rules it covers, and the repo's rules (lint, layers, contract). A criterion only production can show, such as "migrates on deploy", is `check-only`.
+**Goal.** One sentence, then three to eight numbered criteria, each pass/fail and paired with its check: a command, or the exact thing to inspect. Draw them from the issue's acceptance criteria (a bug's expected behavior, a chore's change), the business rules it covers, and the repo's rules (lint, layers, contract). A criterion is `check-only` only when production alone can show it: it deploys or migrates, a config value or secret is set, an outside platform accepts it, or it needs real data. Behavior a user sees is a Test map row or a Walk-through step, even when it is quicker to try on production: production checks wait on the founder. A real device is never a criterion: the walk-through runs on a simulator or emulator, and devices go on the release checklist (Post-deploy).
 
 **Test map.** Every criterion that is not check-only maps to tests, held to these rules and nothing past them:
 
@@ -105,7 +109,8 @@ Only when the task can move a metric (queries, hot paths, page weight) or the is
 
 ## 8. Post-deploy
 
-- **Immediate:** what the build checks once the deploy is live: health, a smoke request, a metric read. Every check-only criterion is one of these.
+- **Immediate:** what the build checks once the deploy is live: health, a smoke request, a metric read. Every check-only criterion is one of these. A message sent through an outside service (WhatsApp, email, SMS) is confirmed through that service's API, such as its delivery status or send log, never on a phone. A check only the founder can run, needing their hands or an account only they hold, is marked `founder`: it holds nothing, and becomes a `check` issue run on deploy day, which `next` batches for them.
+- **Release:** what only a real device shows (a gesture, a fold, a camera, opening another app), on mobile. One line each, added to the repo's release checklist when the task ships.
 - **Delayed:** what needs time to show, such as a week of query times after an index. Each becomes a `check` issue when the task ships: question, method, pass threshold, run dates as days after deploy.
 
 An epic success metric this task unlocks becomes a delayed check here.
@@ -140,6 +145,10 @@ The design and why. An ASCII diagram for anything with more than two moving part
 | :- | :- | :- | :- | :- | :- |
 | 1 | `<file>`: <name> | api | given … when … then … | <endpoint> does not exist | <a wrong build that would pass without this row> |
 
+## Walk-through
+Run on: <web | iOS simulator | Android emulator>, seeded as Delivery's Walk-through line says
+1. <what a user does> | sees: <what is on screen>
+
 ## Performance
 | Metric | Baseline | Target | Method |
 | :- | :- | :- | :- |
@@ -148,7 +157,8 @@ The design and why. An ASCII diagram for anything with more than two moving part
 1. [ ] <what changes> | `<files>` | <layer>
 
 ## Post-deploy
-- Immediate: <check> | `<command>`
+- Immediate: <check> | `<command>` | <build | founder>
+- Release: <what to check on a real device>
 - Delayed: <question> | <method> | pass when <threshold> | run on deploy + <n> days
 
 ## Risks
@@ -166,7 +176,7 @@ The design and why. An ASCII diagram for anything with more than two moving part
 - Assumed: <assumption>
 ```
 
-Leave out Performance when its step does not apply. Steps cover the implementation only: the build writes the tests first and handles the PR and deploy.
+Leave out Performance when its step does not apply, and Walk-through when no criterion changes what a user sees or does on screen. Steps cover the implementation only: the build writes the tests first and handles the PR and deploy.
 
 Every step names its files and layer, and no step lets a layer skip its neighbor. Write tersely: every sentence should change what the builder does.
 
@@ -192,7 +202,7 @@ Task: #<n> <title> (<Approved | waiting on you>)
 Achieves: <who can do what after it, and what they see, as the founder confirmed>
 Not in it: <what it leaves out, or nothing>
 Criteria: <numbered, one line each>
-Tests: <count> mapped, <count> check-only; map audit <PASS | FAIL, <n> rows changed>; track <full: trigger | light>
+Tests: <count> mapped, <count> check-only, walk-through <steps | none>; map audit <PASS | FAIL, <n> rows changed>; track <full: trigger | light>
 Approach: <2-4 bullets>
 One-way doors: <each open one with the recommended choice, or none>
 Assumed business rules: <each, also added to the epic doc, or none>

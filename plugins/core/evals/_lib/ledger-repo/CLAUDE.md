@@ -5,6 +5,7 @@ Invoicing app for small studios. Next.js on Vercel, Postgres.
 ## Delivery
 
 - Test: `npm test` (node --test) · end-to-end: none
+- Walk-through: none, nothing runs locally
 - Lint and analyse: `npm run lint`
 - Local stack: none
 - Worktree setup: `npm ci`
@@ -17,6 +18,8 @@ Invoicing app for small studios. Next.js on Vercel, Postgres.
 - Expected load: 40 studios, under 5 requests per second
 
 ## Issues
+
+<!-- core setup v3 -->
 
 Work is tracked in GitHub issues. Each issue has exactly one type label: `feature`, `chore`, `check`, `research`, `bug`, `founder`.
 
